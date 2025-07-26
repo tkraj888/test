@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamResultController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.controller</a> &gt; <span class="el_source">ExamResultController.java</span></div><h1>ExamResultController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.controller;
+
+import com.spring.jwt.Exam.Dto.ExamResultDTO;
+import com.spring.jwt.Exam.entity.ExamSession;
+import com.spring.jwt.Exam.repository.ExamSessionRepository;
+import com.spring.jwt.Exam.scheduler.ExamResultScheduler;
+import com.spring.jwt.Exam.service.ExamResultService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Controller for exam results
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/exam-results&quot;)
+<span class="nc" id="L31">@RequiredArgsConstructor</span>
+<span class="nc" id="L32">@Slf4j</span>
+@Tag(name = &quot;Exam Results&quot;, description = &quot;APIs for retrieving exam results&quot;)
+public class ExamResultController {
+
+    private final ExamResultService examResultService;
+    private final ExamResultScheduler examResultScheduler;
+    private final ExamSessionRepository examSessionRepository;
+    
+    @Operation(
+            summary = &quot;Get exam results by user ID&quot;,
+            description = &quot;Retrieves all exam results for a specific user&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Results retrieved successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;No results found for the user&quot;)
+    })
+    @GetMapping(&quot;/user/{userId}&quot;)
+//    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'TEACHER') or authentication.principal.id == #userId&quot;)
+    @PermitAll
+    public ResponseEntity&lt;List&lt;ExamResultDTO&gt;&gt; getResultsByUserId(@PathVariable Long userId) {
+<span class="nc" id="L53">        List&lt;ExamResultDTO&gt; results = examResultService.getResultsByUserId(userId);</span>
+<span class="nc" id="L54">        return ResponseEntity.ok(results);</span>
+    }
+    
+    @Operation(
+            summary = &quot;Get exam results by paper ID&quot;,
+            description = &quot;Retrieves all exam results for a specific paper&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Results retrieved successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;No results found for the paper&quot;)
+    })
+    @GetMapping(&quot;/paper/{paperId}&quot;)
+//    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'TEACHER')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;List&lt;ExamResultDTO&gt;&gt; getResultsByPaperId(@PathVariable Integer paperId) {
+<span class="nc" id="L70">        List&lt;ExamResultDTO&gt; results = examResultService.getResultsByPaperId(paperId);</span>
+<span class="nc" id="L71">        return ResponseEntity.ok(results);</span>
+    }
+    
+    @Operation(
+            summary = &quot;Get exam results by student class&quot;,
+            description = &quot;Retrieves all exam results for a specific student class&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Results retrieved successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;No results found for the class&quot;)
+    })
+    @GetMapping(&quot;/class/{studentClass}&quot;)
+//    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'TEACHER')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;List&lt;ExamResultDTO&gt;&gt; getResultsByStudentClass(@PathVariable String studentClass) {
+<span class="nc" id="L87">        List&lt;ExamResultDTO&gt; results = examResultService.getResultsByStudentClass(studentClass);</span>
+<span class="nc" id="L88">        return ResponseEntity.ok(results);</span>
+    }
+    
+    @Operation(
+            summary = &quot;Manually process ready exam results&quot;,
+            description = &quot;Triggers the processing of exam sessions that have reached their result date&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Processing completed successfully&quot;)
+    })
+    @PostMapping(&quot;/process&quot;)
+//    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;String&gt; processReadyResults() {
+<span class="nc" id="L103">        int processed = examResultService.processReadyExamResults();</span>
+<span class="nc" id="L104">        return ResponseEntity.ok(&quot;Processed &quot; + processed + &quot; exam results&quot;);</span>
+    }
+    
+    @Operation(
+            summary = &quot;Debug scheduler execution&quot;,
+            description = &quot;Test endpoint to debug scheduler execution&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @GetMapping(&quot;/debug/scheduler&quot;)
+//    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; debugScheduler() {
+<span class="nc" id="L116">        log.info(&quot;Manually triggering scheduler for debugging&quot;);</span>
+        
+        // Check raw database values
+<span class="nc" id="L119">        List&lt;Map&lt;String, Object&gt;&gt; rawDates = examSessionRepository.findRawResultDates();</span>
+<span class="nc" id="L120">        log.info(&quot;Raw database values: {}&quot;, rawDates);</span>
+        
+        // Check if there are sessions with result dates in the past
+<span class="nc" id="L123">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="nc" id="L124">        List&lt;ExamSession&gt; readySessions = examSessionRepository.findByResultDateBeforeOrEqual(now);</span>
+        
+        // Get all sessions with result dates for debugging
+<span class="nc" id="L127">        List&lt;ExamSession&gt; allWithResultDate = examSessionRepository.findAllWithResultDate();</span>
+        
+        // Try to find sessions with the specific date mentioned (2025-07-04 22:37:00)
+<span class="nc" id="L130">        LocalDateTime specificDate = LocalDateTime.of(2025, 7, 4, 22, 37, 0);</span>
+<span class="nc" id="L131">        List&lt;ExamSession&gt; specificDateSessions = examSessionRepository.findByExactResultDate(specificDate);</span>
+        
+        // Manually trigger the scheduler
+<span class="nc" id="L134">        examResultScheduler.processReadyExamResults();</span>
+        
+        // Return debug info
+<span class="nc" id="L137">        return ResponseEntity.ok(Map.of(</span>
+<span class="nc" id="L138">            &quot;currentTime&quot;, now.toString(),</span>
+            &quot;rawDatabaseValues&quot;, rawDates,
+<span class="nc" id="L140">            &quot;readySessionsCount&quot;, readySessions.size(),</span>
+<span class="nc" id="L141">            &quot;readySessions&quot;, readySessions.stream().map(s -&gt; Map.of(</span>
+<span class="nc" id="L142">                &quot;sessionId&quot;, s.getSessionId(),</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                &quot;resultDate&quot;, s.getResultDate() != null ? s.getResultDate().toString() : &quot;null&quot;,</span>
+<span class="nc" id="L144">                &quot;userId&quot;, s.getUser().getId(),</span>
+<span class="nc" id="L145">                &quot;paperId&quot;, s.getPaper().getPaperId()</span>
+<span class="nc" id="L146">            )).toList(),</span>
+<span class="nc" id="L147">            &quot;allWithResultDateCount&quot;, allWithResultDate.size(),</span>
+<span class="nc" id="L148">            &quot;allWithResultDate&quot;, allWithResultDate.stream().map(s -&gt; Map.of(</span>
+<span class="nc" id="L149">                &quot;sessionId&quot;, s.getSessionId(),</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                &quot;resultDate&quot;, s.getResultDate() != null ? s.getResultDate().toString() : &quot;null&quot;</span>
+<span class="nc" id="L151">            )).toList(),</span>
+<span class="nc" id="L152">            &quot;specificDate&quot;, specificDate.toString(),</span>
+<span class="nc" id="L153">            &quot;specificDateSessionsCount&quot;, specificDateSessions.size(),</span>
+<span class="nc" id="L154">            &quot;specificDateSessions&quot;, specificDateSessions.stream().map(s -&gt; Map.of(</span>
+<span class="nc" id="L155">                &quot;sessionId&quot;, s.getSessionId(),</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                &quot;resultDate&quot;, s.getResultDate() != null ? s.getResultDate().toString() : &quot;null&quot;</span>
+<span class="nc" id="L157">            )).toList()</span>
+        ));
+    }
+
+    @Operation(
+            summary = &quot;Fix result date format&quot;,
+            description = &quot;Updates the result date format in the database&quot;,
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @PostMapping(&quot;/fix-date-format&quot;)
+//    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;String&gt; fixDateFormat() {
+<span class="nc" id="L170">        log.info(&quot;Fixing result date format in the database&quot;);</span>
+        
+        // Get the current date/time in the correct format
+<span class="nc" id="L173">        LocalDateTime now = LocalDateTime.now();</span>
+        
+        try {
+            // Use a direct JDBC update to fix the date format
+<span class="nc" id="L177">            int updated = examResultService.fixResultDateFormat();</span>
+<span class="nc" id="L178">            return ResponseEntity.ok(&quot;Fixed &quot; + updated + &quot; exam session dates&quot;);</span>
+<span class="nc" id="L179">        } catch (Exception e) {</span>
+<span class="nc" id="L180">            log.error(&quot;Error fixing date format: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L181">            return ResponseEntity.status(500).body(&quot;Error fixing date format: &quot; + e.getMessage());</span>
+        }
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

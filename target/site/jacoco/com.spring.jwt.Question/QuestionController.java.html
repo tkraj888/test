@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Question</a> &gt; <span class="el_source">QuestionController.java</span></div><h1>QuestionController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Question;
+
+import com.spring.jwt.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+/////////////////////////////////////////////////////////////////////////////////////
+//
+//      File Name    : QuestionsController
+//      Description  : to perform Questions CRUD Operations
+//      Author       : Ashutosh Shedge
+//      Date         : 28/04/2025
+//
+//////////////////////////////////////////////////////////////////////////////////
+@RestController
+@RequestMapping(&quot;/api/v1/questions&quot;)
+@Tag(name = &quot;Question Management&quot;, description = &quot;APIs for managing questions&quot;)
+@Validated
+<span class="nc" id="L47">@RequiredArgsConstructor</span>
+public class QuestionController {
+
+<span class="nc" id="L50">    private static final Logger log = LoggerFactory.getLogger(QuestionController.class);</span>
+
+    private final QuestionService questionService;
+
+    @Operation(summary = &quot;Create a new question&quot;, description = &quot;Creates a new question with the provided details&quot;)
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Question created successfully&quot;),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input&quot;),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;)
+    })
+    @PostMapping(&quot;/add&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;QuestionDTO&gt;&gt; createQuestion(
+            @Parameter(description = &quot;Question details&quot;, required = true)
+            @Valid @RequestBody QuestionDTO questionDTO) {
+        try {
+<span class="nc" id="L66">            QuestionDTO created = questionService.createQuestion(questionDTO);</span>
+<span class="nc" id="L67">            return ResponseEntity.ok(ApiResponse.success(&quot;Question created successfully&quot;, created));</span>
+<span class="nc" id="L68">        } catch (Exception e) {</span>
+<span class="nc" id="L69">            log.error(&quot;Failed to create question: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L70">            return ResponseEntity.badRequest().body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to create question&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Create multiple questions in bulk&quot;,
+            description = &quot;Creates multiple questions with shared subject, userId, and studentClass. Returns a list of created questions.&quot;
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Questions created successfully&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;)
+    })
+    @PostMapping(&quot;/add/bulk&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;QuestionDTO&gt;&gt;&gt; createQuestionsBulk(
+            @Parameter(description = &quot;Bulk question details&quot;, required = true)
+            @Valid @RequestBody BulkQuestionDTO bulkDTO) {
+        try {
+<span class="nc" id="L89">            List&lt;QuestionDTO&gt; created = questionService.createQuestionsBulk(bulkDTO);</span>
+<span class="nc" id="L90">            return ResponseEntity.ok(ApiResponse.success(&quot;Questions created successfully&quot;, created));</span>
+<span class="nc" id="L91">        } catch (Exception e) {</span>
+<span class="nc" id="L92">            log.error(&quot;Failed to create questions: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L93">            return ResponseEntity.badRequest().body(</span>
+<span class="nc" id="L94">                    ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to create questions&quot;, e.getMessage())</span>
+            );
+        }
+    }
+    @Operation(summary = &quot;Get a question by ID&quot;, description = &quot;Retrieves a question by its unique identifier&quot;)
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Question found&quot;),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Question not found&quot;),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;)
+    })
+    @GetMapping(&quot;/getById&quot;)
+//    @PreAuthorize(&quot;hasAnyAuthority('USER', 'ADMIN', 'TEACHER', 'STUDENT', 'PARENT') or isAuthenticated()&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;QuestionDTO&gt;&gt; getQuestionById(
+            @Parameter(description = &quot;Question ID&quot;, required = true, example = &quot;1&quot;)
+            @RequestParam @Min(1) Integer id) {
+        try {
+<span class="nc" id="L111">            QuestionDTO question = questionService.getQuestionById(id);</span>
+<span class="nc" id="L112">            return ResponseEntity.ok(ApiResponse.success(&quot;Question fetched successfully&quot;, question));</span>
+<span class="nc" id="L113">        } catch (QuestionNotFoundException e) {</span>
+<span class="nc" id="L114">            log.error(&quot;Question not found: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L115">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L116">                    .body(ApiResponse.error(HttpStatus.NOT_FOUND, &quot;Question not found&quot;, e.getMessage()));</span>
+<span class="nc" id="L117">        } catch (Exception e) {</span>
+<span class="nc" id="L118">            log.error(&quot;Failed to fetch question: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L119">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L120">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to fetch question&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @GetMapping(&quot;/all&quot;)
+//    @PreAuthorize(&quot;hasAuthority('ADMIN') or hasAuthority('TEACHER')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;Page&lt;QuestionDTO&gt;&gt;&gt; getAllQuestions(
+            @Parameter(description = &quot;Page number (0-based)&quot;, example = &quot;0&quot;)
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @Parameter(description = &quot;Page size&quot;, example = &quot;10&quot;)
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @Parameter(description = &quot;Sort field&quot;, example = &quot;questionId&quot;)
+            @RequestParam(defaultValue = &quot;questionId&quot;) String sortBy,
+            @Parameter(description = &quot;Sort direction (asc or desc)&quot;, example = &quot;asc&quot;)
+            @RequestParam(defaultValue = &quot;asc&quot;) String direction) {
+        try {
+<span class="nc" id="L137">            log.info(&quot;Accessing /questions/all endpoint - requires authentication&quot;);</span>
+            
+<span class="nc" id="L139">            Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L140" title="All 4 branches missed.">            if (auth != null &amp;&amp; auth.isAuthenticated()) {</span>
+<span class="nc" id="L141">                log.info(&quot;User '{}' authenticated with authorities: {}&quot;, </span>
+<span class="nc" id="L142">                    auth.getName(), </span>
+<span class="nc" id="L143">                    auth.getAuthorities().stream()</span>
+<span class="nc" id="L144">                        .map(GrantedAuthority::getAuthority)</span>
+<span class="nc" id="L145">                        .collect(Collectors.joining(&quot;, &quot;))</span>
+                );
+            } else {
+<span class="nc" id="L148">                log.warn(&quot;No authentication found or user not authenticated for /questions/all&quot;);</span>
+            }
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            Sort sort = direction.equalsIgnoreCase(&quot;asc&quot;) ? </span>
+<span class="nc" id="L152">                Sort.by(sortBy).ascending() : </span>
+<span class="nc" id="L153">                Sort.by(sortBy).descending();</span>
+            
+<span class="nc" id="L155">            Pageable pageable = PageRequest.of(page, size, sort);</span>
+<span class="nc" id="L156">            Page&lt;QuestionDTO&gt; questions = questionService.getAllQuestions(pageable);</span>
+            
+<span class="nc" id="L158">            return ResponseEntity.ok(ApiResponse.success(&quot;All questions fetched successfully&quot;, questions));</span>
+<span class="nc" id="L159">        } catch (Exception e) {</span>
+<span class="nc" id="L160">            log.error(&quot;Error fetching all questions: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L161">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L162">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to fetch questions&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @PatchMapping(&quot;/update&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;QuestionDTO&gt;&gt; updateQuestion(
+            @Parameter(description = &quot;Question ID to update&quot;, required = true, example = &quot;1&quot;)
+            @RequestParam @Min(1) Integer id,
+            @Parameter(description = &quot;Question data to update&quot;, required = true)
+            @RequestBody QuestionUpdateDTO updatedQuestion // &lt;-- Remove @Valid here
+    ) {
+        try {
+<span class="nc" id="L175">            QuestionDTO updated = questionService.updateQuestion(id, updatedQuestion);</span>
+<span class="nc" id="L176">            return ResponseEntity.ok(ApiResponse.success(&quot;Question updated successfully&quot;, updated));</span>
+<span class="nc" id="L177">        } catch (QuestionNotFoundException e) {</span>
+<span class="nc" id="L178">            log.error(&quot;Question not found for update: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L179">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L180">                    .body(ApiResponse.error(HttpStatus.NOT_FOUND, &quot;Question not found&quot;, e.getMessage()));</span>
+<span class="nc" id="L181">        } catch (Exception e) {</span>
+<span class="nc" id="L182">            log.error(&quot;Failed to update question: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L183">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L184">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to update question&quot;, e.getMessage()));</span>
+        }
+    }
+
+
+    @DeleteMapping(&quot;/delete&quot;)
+//    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; deleteQuestion(
+            @Parameter(description = &quot;Question ID to delete&quot;, required = true, example = &quot;1&quot;)
+            @RequestParam @Min(1) Integer id) {
+        try {
+<span class="nc" id="L196">            questionService.deleteQuestion(id);</span>
+<span class="nc" id="L197">            return ResponseEntity.ok(ApiResponse.success(&quot;Question deleted successfully&quot;));</span>
+<span class="nc" id="L198">        } catch (QuestionNotFoundException e) {</span>
+<span class="nc" id="L199">            log.error(&quot;Question not found for deletion: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L200">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L201">                    .body(ApiResponse.error(HttpStatus.NOT_FOUND, &quot;Question not found&quot;, e.getMessage()));</span>
+<span class="nc" id="L202">        } catch (Exception e) {</span>
+<span class="nc" id="L203">            log.error(&quot;Failed to delete question: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L204">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L205">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to delete question&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @GetMapping(&quot;/user&quot;)
+//    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;Page&lt;QuestionDTO&gt;&gt;&gt; getQuestionsByUserId(
+            @Parameter(description = &quot;User ID&quot;, required = true, example = &quot;1&quot;)
+            @RequestParam @Min(1) Integer userId,
+            @Parameter(description = &quot;Page number (0-based)&quot;, example = &quot;0&quot;)
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @Parameter(description = &quot;Page size&quot;, example = &quot;10&quot;)
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @Parameter(description = &quot;Sort field&quot;, example = &quot;questionId&quot;)
+            @RequestParam(defaultValue = &quot;questionId&quot;) String sortBy,
+            @Parameter(description = &quot;Sort direction (asc or desc)&quot;, example = &quot;asc&quot;)
+            @RequestParam(defaultValue = &quot;asc&quot;) String direction) {
+        try {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">            Sort sort = direction.equalsIgnoreCase(&quot;asc&quot;) ?</span>
+<span class="nc" id="L225">                Sort.by(sortBy).ascending() : </span>
+<span class="nc" id="L226">                Sort.by(sortBy).descending();</span>
+            
+<span class="nc" id="L228">            Pageable pageable = PageRequest.of(page, size, sort);</span>
+<span class="nc" id="L229">            Page&lt;QuestionDTO&gt; questions = questionService.getQuestionsByUserId(userId, pageable);</span>
+            
+<span class="nc" id="L231">            return ResponseEntity.ok(ApiResponse.success(&quot;Questions fetched for userId &quot; + userId, questions));</span>
+<span class="nc" id="L232">        } catch (QuestionNotFoundException e) {</span>
+<span class="nc" id="L233">            log.error(&quot;No questions found for user: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L234">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L235">                    .body(ApiResponse.error(HttpStatus.NOT_FOUND, &quot;No questions found&quot;, e.getMessage()));</span>
+<span class="nc" id="L236">        } catch (Exception e) {</span>
+<span class="nc" id="L237">            log.error(&quot;Failed to fetch questions by userId: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L238">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L239">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to fetch questions by userId&quot;, e.getMessage()));</span>
+        }
+    }
+
+    @GetMapping(&quot;/search&quot;)
+    @PermitAll
+    public ResponseEntity&lt;ApiResponse&lt;Page&lt;QuestionDTO&gt;&gt;&gt; getQuestionsBySubTypeLevelMarks(
+            @Parameter(description = &quot;Subject&quot;, example = &quot;Mathematics&quot;)
+            @RequestParam(required = false) String subject,
+            @Parameter(description = &quot;Question type&quot;, example = &quot;MCQ&quot;)
+            @RequestParam(required = false) String type,
+            @Parameter(description = &quot;Difficulty level&quot;, example = &quot;Medium&quot;)
+            @RequestParam(required = false) String level,
+            @Parameter(description = &quot;Marks&quot;, example = &quot;5&quot;)
+            @RequestParam(required = false) String marks,
+            @Parameter(description = &quot;Page number (0-based)&quot;, example = &quot;0&quot;)
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @Parameter(description = &quot;Page size&quot;, example = &quot;10&quot;)
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @Parameter(description = &quot;Sort field&quot;, example = &quot;questionId&quot;)
+            @RequestParam(defaultValue = &quot;questionId&quot;) String sortBy,
+            @Parameter(description = &quot;Sort direction (asc or desc)&quot;, example = &quot;asc&quot;)
+            @RequestParam(defaultValue = &quot;asc&quot;) String direction) {
+        try {
+<span class="nc" id="L263">            Map&lt;String, String&gt; filters = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            if (subject != null) filters.put(&quot;subject&quot;, subject);</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (type != null) filters.put(&quot;type&quot;, type);</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">            if (level != null) filters.put(&quot;level&quot;, level);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (marks != null) filters.put(&quot;marks&quot;, marks);</span>
+            
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            Sort sort = direction.equalsIgnoreCase(&quot;asc&quot;) ?</span>
+<span class="nc" id="L270">                Sort.by(sortBy).ascending() : </span>
+<span class="nc" id="L271">                Sort.by(sortBy).descending();</span>
+            
+<span class="nc" id="L273">            Pageable pageable = PageRequest.of(page, size, sort);</span>
+            
+<span class="nc" id="L275">            Page&lt;QuestionDTO&gt; questions = questionService.searchQuestions(filters, pageable);</span>
+            
+<span class="nc" id="L277">            return ResponseEntity.ok(ApiResponse.success(&quot;Questions fetched by criteria&quot;, questions));</span>
+<span class="nc" id="L278">        } catch (QuestionNotFoundException e) {</span>
+<span class="nc" id="L279">            log.error(&quot;No questions found for criteria: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L280">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L281">                    .body(ApiResponse.error(HttpStatus.NOT_FOUND, &quot;No questions found&quot;, e.getMessage()));</span>
+<span class="nc" id="L282">        } catch (InvalidQuestionException e) {</span>
+<span class="nc" id="L283">            log.error(&quot;Invalid search criteria: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L284">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L285">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Invalid search criteria&quot;, e.getMessage()));</span>
+<span class="nc" id="L286">        } catch (Exception e) {</span>
+<span class="nc" id="L287">            log.error(&quot;Failed to fetch questions by criteria: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L288">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L289">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to fetch questions by criteria&quot;, e.getMessage()));</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

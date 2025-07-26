@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Payslip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 25px;
+            color: #000;
+        }
+
+        .company-header {
+            text-align: center;
+            font-weight: normal;
+            font-family: Verdana, sans-serif;
+            font-size: 34px;
+        }
+
+        .company-subheader {
+            text-align: center;
+            font-size: 13px;
+            margin: 13px 0 40px 0;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            text-align: center;
+            font-weight: bold;
+            font-family: Verdana, sans-serif;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .info-table {
+            width: 90%;
+            margin: 0 auto 20px auto;
+            border: 0.5px solid #000;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            text-align: left;
+        }
+
+        .info-table td {
+            padding: 6px 10px;
+            vertical-align: top;
+            border: none;
+        }
+
+        .info-table td.label,
+        .info-table td.value {
+            width: 25%;
+        }
+
+        .info-table td.mid-border {
+            border-left: 1px solid #000;
+        }
+
+        .combined-salary-table {
+            width: 90%;
+            margin: 0 auto 20px auto;
+            border: 0.5px solid #000;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 12px;
+        }
+
+        .combined-salary-table td.block {
+            width: 50%;
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .combined-salary-table .mid-border {
+            border-left: 1px solid #000;
+        }
+
+        .combined-salary-table .totals-cell {
+            border-top: 1px solid #000;
+        }
+
+        .inner-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .inner-table td {
+            padding: 6px 10px;
+            border: none;
+        }
+
+        .combined-salary-table .headers-row .inner-table td {
+            border-bottom: 1px solid #000;
+            padding: 12px 10px;
+        }
+
+        .inner-table td.left {
+            text-align: left;
+        }
+
+        .inner-table td.right {
+            text-align: right;
+        }
+
+        .netpay {
+            width: 90%;
+            font-weight: bold;
+            margin: 20px auto 0 auto;
+            padding-top: 8px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .footer-note {
+            width: 90%;
+            margin: 40px auto 0 auto;
+            padding-top: 8px;
+            border-top: 1px solid #000;
+            text-align: center;
+            font-size: 12px;
+            color: #575353;
+
+        }
+         @font-face {
+        font-family: 'DejaVuSans';
+        src: url('file:src/main/resources/fonts/DejaVuSans.ttf') format('truetype');
+    }
+    body {
+        font-family: 'DejaVuSans', sans-serif;
+    }
+    </style>
+</head>
+
+<body>
+<div class="company-header">GTasterix IT Services<br />Private Limited</div>
+
+<div class="company-subheader">
+    Gera’s Imperium Rise, Hinjawadi Phase II, Hinjawadi Rajiv<br />
+    Gandhi Infotech Park, Hinjawadi,<br />
+    Pune, Maharashtra, India - 442203
+</div>
+
+<div class="section-title">
+    Pay slip for ${month} ${year}
+</div>
+
+<table class="info-table">
+    <tr>
+        <td class="label">Name:</td>
+        <td class="value">${name}</td>
+        <td class="mid-border label">Employee ID:</td>
+        <td class="value">${employeeId}</td>
+    </tr>
+    <tr>
+        <td class="label">Designation:</td>
+        <td class="value">${designation}</td>
+        <td class="mid-border label">Bank Name:</td>
+        <td class="value">${bankName}</td>
+    </tr>
+    <tr>
+        <td class="label">Department:</td>
+        <td class="value">${department}</td>
+        <td class="mid-border label">Bank Account Number:</td>
+        <td class="value">${bankAccountNumber}</td>
+    </tr>
+    <tr>
+        <td class="label">Location:</td>
+        <td class="value">${location}</td>
+        <td class="mid-border label">PAN:</td>
+        <td class="value">${pan}</td>
+    </tr>
+    <tr>
+        <td class="label">Date of Joining:</td>
+        <td class="value">${dateOfJoining}</td>
+        <td class="mid-border label">Working Days:</td>
+        <td class="value">${workingDays}</td>
+    </tr>
+    <tr>
+        <td class="label">LOP:</td>
+        <td class="value">${absentDays}</td>
+        <td class="mid-border"></td>
+        <td></td>
+    </tr>
+</table>
+
+<table class="combined-salary-table">
+    <!-- Headers -->
+    <tr class="headers-row">
+        <td class="block">
+            <table class="inner-table">
+                <tr>
+                    <td class="left"><strong>Earnings</strong></td>
+                    <td class="right"><strong>Amount</strong></td>
+                </tr>
+            </table>
+        </td>
+        <td class="block mid-border">
+            <table class="inner-table">
+                <tr>
+                    <td class="left"><strong>Deductions</strong></td>
+                    <td class="right"><strong>Amount</strong></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Data Rows -->
+    <tr>
+        <td class="block">
+            <table class="inner-table">
+                <tr><td class="left">Basic</td><td class="right">₹ ${basicPay}</td></tr>
+                <tr><td class="left">HRA</td><td class="right">₹ ${hra}</td></tr>
+                <tr><td class="left">DA</td><td class="right">₹ ${da}</td></tr>
+                <tr><td class="left">LTA</td><td class="right">₹ ${travelAllowances}</td></tr>
+                <tr><td class="left">Special Allowance</td><td class="right">₹ ${specialAllowances}</td></tr>
+            </table>
+        </td>
+        <td class="block mid-border">
+            <table class="inner-table">
+                <tr><td class="left">Income Tax</td><td class="right">₹ 0.00</td></tr>
+                <tr><td class="left">Provident Fund</td><td class="right">₹ 0.00</td></tr>
+                <tr><td class="left">Professional Tax</td><td class="right">₹ ${totalDeductions}</td></tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Totals Row -->
+    <tr class="totals-row">
+        <td class="block totals-cell">
+            <table class="inner-table">
+                <tr>
+                    <td class="left"><strong>Total Earnings</strong></td>
+                    <td class="right"><strong>₹ ${totalEarnings}</strong></td>
+                </tr>
+            </table>
+        </td>
+        <td class="block mid-border totals-cell">
+            <table class="inner-table">
+                <tr>
+                    <td class="left"><strong>Total Deductions</strong></td>
+                    <td class="right"><strong>₹ ${totalDeductions}</strong></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div class="netpay">
+    Net Pay for the month: <strong>₹ ${netSalary}</strong>
+</div>
+
+<div class="footer-note">
+    This is a system generated payslip and does not require signature.
+</div>
+</body>
+</html>

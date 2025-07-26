@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamResultServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.serviceImpl</a> &gt; <span class="el_source">ExamResultServiceImpl.java</span></div><h1>ExamResultServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.serviceImpl;
+
+import com.spring.jwt.Exam.Dto.ExamResultDTO;
+import com.spring.jwt.Exam.entity.ExamResult;
+import com.spring.jwt.Exam.entity.ExamSession;
+import com.spring.jwt.Exam.entity.UserAnswer;
+import com.spring.jwt.Exam.repository.ExamResultRepository;
+import com.spring.jwt.Exam.repository.ExamSessionRepository;
+import com.spring.jwt.Exam.service.ExamResultService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of the ExamResultService interface
+ */
+@Service
+<span class="nc" id="L26">@RequiredArgsConstructor</span>
+<span class="nc" id="L27">@Slf4j</span>
+public class ExamResultServiceImpl implements ExamResultService {
+
+    private final ExamSessionRepository examSessionRepository;
+    private final ExamResultRepository examResultRepository;
+    private final JdbcTemplate jdbcTemplate;
+    
+    @Override
+    @Transactional
+    public int fixResultDateFormat() {
+        // Get all sessions with result dates
+<span class="nc" id="L38">        List&lt;Map&lt;String, Object&gt;&gt; rawDates = examSessionRepository.findRawResultDates();</span>
+<span class="nc" id="L39">        log.info(&quot;Found {} sessions with result dates to fix&quot;, rawDates.size());</span>
+        
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (rawDates.isEmpty()) {</span>
+<span class="nc" id="L42">            return 0;</span>
+        }
+        
+<span class="nc" id="L45">        int updatedCount = 0;</span>
+        
+        // For each session, update the result date format
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; row : rawDates) {</span>
+            try {
+<span class="nc" id="L50">                Integer sessionId = (Integer) row.get(&quot;session_id&quot;);</span>
+<span class="nc" id="L51">                Object rawDate = row.get(&quot;result_date&quot;);</span>
+                
+<span class="nc" id="L53">                log.info(&quot;Processing session ID: {}, raw date: {}, class: {}&quot;, </span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                        sessionId, rawDate, rawDate != null ? rawDate.getClass().getName() : &quot;null&quot;);</span>
+                
+<span class="nc bnc" id="L56" title="All 2 branches missed.">                if (rawDate == null) {</span>
+<span class="nc" id="L57">                    continue;</span>
+                }
+                
+                // Update the specific session with the correct date format
+<span class="nc" id="L61">                String sql = &quot;UPDATE exam_session SET result_date = ? WHERE session_id = ?&quot;;</span>
+                
+                // Use the current time as a test (you can modify this as needed)
+<span class="nc" id="L64">                LocalDateTime testDate = LocalDateTime.of(2023, 7, 4, 22, 37, 0);</span>
+                
+<span class="nc" id="L66">                int updated = jdbcTemplate.update(sql, testDate, sessionId);</span>
+<span class="nc" id="L67">                log.info(&quot;Updated session {}: {} rows affected&quot;, sessionId, updated);</span>
+                
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (updated &gt; 0) {</span>
+<span class="nc" id="L70">                    updatedCount++;</span>
+                }
+<span class="nc" id="L72">            } catch (Exception e) {</span>
+<span class="nc" id="L73">                log.error(&quot;Error updating session: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L74">            }</span>
+<span class="nc" id="L75">        }</span>
+        
+<span class="nc" id="L77">        log.info(&quot;Successfully updated {} out of {} sessions&quot;, updatedCount, rawDates.size());</span>
+<span class="nc" id="L78">        return updatedCount;</span>
+    }
+    
+    @Override
+    @Transactional
+    public int processReadyExamResults() {
+<span class="nc" id="L84">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="nc" id="L85">        log.info(&quot;Checking for exam sessions with resultDate &lt;= {}&quot;, now);</span>
+        
+        // Debug: Print all sessions with result dates
+<span class="nc" id="L88">        List&lt;ExamSession&gt; allWithResultDates = examSessionRepository.findAllWithResultDate();</span>
+<span class="nc" id="L89">        log.info(&quot;Found {} sessions with non-null resultDate&quot;, allWithResultDates.size());</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        for (ExamSession session : allWithResultDates) {</span>
+<span class="nc" id="L91">            log.info(&quot;Session ID: {}, resultDate: {}&quot;, session.getSessionId(), session.getResultDate());</span>
+<span class="nc" id="L92">        }</span>
+        
+        // Try to find the specific date mentioned by the user
+        try {
+<span class="nc" id="L96">            LocalDateTime specificDate = LocalDateTime.of(2025, 7, 4, 22, 37, 0);</span>
+<span class="nc" id="L97">            log.info(&quot;Looking for sessions with resultDate = {}&quot;, specificDate);</span>
+<span class="nc" id="L98">            List&lt;ExamSession&gt; specificSessions = examSessionRepository.findByExactResultDate(specificDate);</span>
+<span class="nc" id="L99">            log.info(&quot;Found {} sessions with exact resultDate {}&quot;, specificSessions.size(), specificDate);</span>
+            
+            // If we found sessions with the specific date, process them directly
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (!specificSessions.isEmpty()) {</span>
+<span class="nc" id="L103">                log.info(&quot;Processing {} sessions with specific date&quot;, specificSessions.size());</span>
+<span class="nc" id="L104">                int processedCount = 0;</span>
+                
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                for (ExamSession session : specificSessions) {</span>
+                    try {
+<span class="nc" id="L108">                        processExamSession(session);</span>
+<span class="nc" id="L109">                        processedCount++;</span>
+<span class="nc" id="L110">                    } catch (Exception e) {</span>
+<span class="nc" id="L111">                        log.error(&quot;Error processing session {}: {}&quot;, session.getSessionId(), e.getMessage(), e);</span>
+<span class="nc" id="L112">                    }</span>
+<span class="nc" id="L113">                }</span>
+                
+<span class="nc" id="L115">                log.info(&quot;Successfully processed {} sessions with specific date&quot;, processedCount);</span>
+<span class="nc" id="L116">                return processedCount;</span>
+            }
+<span class="nc" id="L118">        } catch (Exception e) {</span>
+<span class="nc" id="L119">            log.error(&quot;Error checking for specific date: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L120">        }</span>
+        
+        // Fall back to the standard method
+<span class="nc" id="L123">        List&lt;ExamSession&gt; readySessions = examSessionRepository.findByResultDateBeforeOrEqual(now);</span>
+        
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (readySessions.isEmpty()) {</span>
+<span class="nc" id="L126">            log.info(&quot;No exam sessions ready for result processing&quot;);</span>
+<span class="nc" id="L127">            return 0;</span>
+        }
+        
+<span class="nc" id="L130">        log.info(&quot;Found {} exam sessions ready for result processing&quot;, readySessions.size());</span>
+<span class="nc" id="L131">        int processedCount = 0;</span>
+        
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        for (ExamSession session : readySessions) {</span>
+            try {
+<span class="nc" id="L135">                processExamSession(session);</span>
+<span class="nc" id="L136">                processedCount++;</span>
+<span class="nc" id="L137">            } catch (Exception e) {</span>
+<span class="nc" id="L138">                log.error(&quot;Error processing exam session with ID {}: {}&quot;, session.getSessionId(), e.getMessage(), e);</span>
+<span class="nc" id="L139">            }</span>
+<span class="nc" id="L140">        }</span>
+        
+<span class="nc" id="L142">        log.info(&quot;Successfully processed {} out of {} exam sessions&quot;, processedCount, readySessions.size());</span>
+<span class="nc" id="L143">        return processedCount;</span>
+    }
+    
+    @Override
+    @Transactional
+    public ExamResult processExamSession(ExamSession session) {
+<span class="nc" id="L149">        log.info(&quot;Processing exam session with ID: {}&quot;, session.getSessionId());</span>
+
+<span class="nc" id="L151">        int totalQuestions = session.getPaper().getPaperQuestions().size();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        int answeredQuestions = session.getUserAnswers() != null ? session.getUserAnswers().size() : 0;</span>
+<span class="nc" id="L153">        int unansweredQuestions = totalQuestions - answeredQuestions;</span>
+        
+<span class="nc" id="L155">        int correctAnswers = 0;</span>
+<span class="nc" id="L156">        int incorrectAnswers = 0;</span>
+        
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (session.getUserAnswers() != null) {</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            for (UserAnswer answer : session.getUserAnswers()) {</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                if (answer.getSelectedOption() != null &amp;&amp; </span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                    answer.getSelectedOption().equals(answer.getQuestion().getAnswer())) {</span>
+<span class="nc" id="L162">                    correctAnswers++;</span>
+                } else {
+<span class="nc" id="L164">                    incorrectAnswers++;</span>
+                }
+<span class="nc" id="L166">            }</span>
+        }
+
+<span class="nc" id="L169">        ExamResult result = new ExamResult();</span>
+<span class="nc" id="L170">        result.setUser(session.getUser());</span>
+<span class="nc" id="L171">        result.setPaper(session.getPaper());</span>
+<span class="nc" id="L172">        result.setStudentClass(session.getStudentClass());</span>
+<span class="nc" id="L173">        result.setExamStartTime(session.getStartTime());</span>
+<span class="nc" id="L174">        result.setExamEndTime(session.getEndTime());</span>
+<span class="nc" id="L175">        result.setResultProcessedTime(LocalDateTime.now());</span>
+<span class="nc" id="L176">        result.setScore(session.getScore());</span>
+<span class="nc" id="L177">        result.setNegativeCount(session.getNegativeCount());</span>
+<span class="nc" id="L178">        result.setNegativeScore(session.getNegativeScore());</span>
+<span class="nc" id="L179">        result.setTotalQuestions(totalQuestions);</span>
+<span class="nc" id="L180">        result.setCorrectAnswers(correctAnswers);</span>
+<span class="nc" id="L181">        result.setIncorrectAnswers(incorrectAnswers);</span>
+<span class="nc" id="L182">        result.setUnansweredQuestions(unansweredQuestions);</span>
+<span class="nc" id="L183">        result.setOriginalSessionId(session.getSessionId());</span>
+
+<span class="nc" id="L185">        ExamResult savedResult = examResultRepository.save(result);</span>
+<span class="nc" id="L186">        log.info(&quot;Created exam result with ID: {} for session ID: {}&quot;, savedResult.getResultId(), session.getSessionId());</span>
+
+<span class="nc" id="L188">        examSessionRepository.delete(session);</span>
+<span class="nc" id="L189">        log.info(&quot;Deleted exam session with ID: {}&quot;, session.getSessionId());</span>
+        
+<span class="nc" id="L191">        return savedResult;</span>
+    }
+    
+    @Override
+    public List&lt;ExamResultDTO&gt; getResultsByUserId(Long userId) {
+<span class="nc" id="L196">        List&lt;ExamResult&gt; results = examResultRepository.findByUser_Id(userId);</span>
+<span class="nc" id="L197">        return results.stream()</span>
+<span class="nc" id="L198">                .map(ExamResultDTO::fromEntity)</span>
+<span class="nc" id="L199">                .collect(Collectors.toList());</span>
+    }
+    
+    @Override
+    public List&lt;ExamResultDTO&gt; getResultsByPaperId(Integer paperId) {
+<span class="nc" id="L204">        List&lt;ExamResult&gt; results = examResultRepository.findByPaper_PaperId(paperId);</span>
+<span class="nc" id="L205">        return results.stream()</span>
+<span class="nc" id="L206">                .map(ExamResultDTO::fromEntity)</span>
+<span class="nc" id="L207">                .collect(Collectors.toList());</span>
+    }
+    
+    @Override
+    public List&lt;ExamResultDTO&gt; getResultsByStudentClass(String studentClass) {
+<span class="nc" id="L212">        List&lt;ExamResult&gt; results = examResultRepository.findByStudentClass(studentClass);</span>
+<span class="nc" id="L213">        return results.stream()</span>
+<span class="nc" id="L214">                .map(ExamResultDTO::fromEntity)</span>
+<span class="nc" id="L215">                .collect(Collectors.toList());</span>
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

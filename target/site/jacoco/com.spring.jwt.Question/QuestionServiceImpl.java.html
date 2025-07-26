@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Question</a> &gt; <span class="el_source">QuestionServiceImpl.java</span></div><h1>QuestionServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Question;
+
+import com.spring.jwt.entity.Question;
+import com.spring.jwt.entity.enum01.QType;
+import com.spring.jwt.repository.UserRepository;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@Validated
+<span class="nc" id="L24">@Slf4j</span>
+<span class="nc" id="L25">@RequiredArgsConstructor</span>
+public class QuestionServiceImpl implements QuestionService {
+
+    private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
+    private final QuestionMapper questionMapper;
+
+    @Override
+    @Transactional
+    public QuestionDTO createQuestion(@Valid QuestionDTO questionDTO) {
+<span class="nc" id="L35">        log.debug(&quot;Creating question: {}&quot;, questionDTO);</span>
+
+<span class="nc" id="L37">        Integer userId = questionDTO.getUserId();</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (!userRepository.existsById(Long.valueOf(userId))) {</span>
+<span class="nc" id="L39">            log.error(&quot;User with ID {} does not exist&quot;, userId);</span>
+<span class="nc" id="L40">            throw new InvalidQuestionException(&quot;User with userId &quot; + userId + &quot; does not exist.&quot;);</span>
+        }
+
+<span class="nc" id="L43">        Question question = questionMapper.toEntity(questionDTO);</span>
+
+<span class="nc" id="L45">        Question savedQuestion = questionRepository.save(question);</span>
+<span class="nc" id="L46">        log.info(&quot;Created question with ID: {}&quot;, savedQuestion.getQuestionId());</span>
+
+<span class="nc" id="L48">        return questionMapper.toDto(savedQuestion);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuestionDTO getQuestionById(Integer id) {
+<span class="nc" id="L54">        log.debug(&quot;Getting question by ID: {}&quot;, id);</span>
+        
+<span class="nc" id="L56">        Question question = questionRepository.findById(id)</span>
+<span class="nc" id="L57">                .orElseThrow(() -&gt; {</span>
+<span class="nc" id="L58">                    log.error(&quot;Question with ID {} not found&quot;, id);</span>
+<span class="nc" id="L59">                    return new QuestionNotFoundException(&quot;Question not found with id: &quot; + id);</span>
+                });
+                
+<span class="nc" id="L62">        return questionMapper.toDto(question);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page&lt;QuestionDTO&gt; getAllQuestions(Pageable pageable) {
+<span class="nc" id="L68">        log.debug(&quot;Getting all questions with pagination: {}&quot;, pageable);</span>
+        
+<span class="nc" id="L70">        Page&lt;Question&gt; questionPage = questionRepository.findAll(pageable);</span>
+<span class="nc" id="L71">        return questionPage.map(questionMapper::toDto);</span>
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;QuestionDTO&gt; getAllQuestions() {
+<span class="nc" id="L77">        log.debug(&quot;Getting all questions without pagination&quot;);</span>
+        
+<span class="nc" id="L79">        List&lt;Question&gt; questions = questionRepository.findAll();</span>
+<span class="nc" id="L80">        return questionMapper.toDtoList(questions);</span>
+    }
+
+    @Override
+    @Transactional
+    public QuestionDTO updateQuestion(Integer id, QuestionUpdateDTO questionUpdateDTO) {
+<span class="nc" id="L86">        log.debug(&quot;Updating question with ID: {}&quot;, id);</span>
+
+<span class="nc" id="L88">        Question question = questionRepository.findById(id)</span>
+<span class="nc" id="L89">                .orElseThrow(() -&gt; {</span>
+<span class="nc" id="L90">                    log.error(&quot;Question with ID {} not found for update&quot;, id);</span>
+<span class="nc" id="L91">                    return new QuestionNotFoundException(&quot;Question not found with id: &quot; + id);</span>
+                });
+
+<span class="nc" id="L94">        questionMapper.updateEntityFromDto(questionUpdateDTO, question);</span>
+
+<span class="nc" id="L96">        Question updatedQuestion = questionRepository.save(question);</span>
+<span class="nc" id="L97">        log.info(&quot;Updated question with ID: {}&quot;, updatedQuestion.getQuestionId());</span>
+
+<span class="nc" id="L99">        return questionMapper.toDto(updatedQuestion);</span>
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteQuestion(Integer id) {
+<span class="nc" id="L106">        log.debug(&quot;Deleting question with ID: {}&quot;, id);</span>
+        
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (!questionRepository.existsById(id)) {</span>
+<span class="nc" id="L109">            log.error(&quot;Question with ID {} not found for deletion&quot;, id);</span>
+<span class="nc" id="L110">            throw new QuestionNotFoundException(&quot;Question not found with id: &quot; + id);</span>
+        }
+        
+<span class="nc" id="L113">        questionRepository.deleteById(id);</span>
+<span class="nc" id="L114">        log.info(&quot;Deleted question with ID: {}&quot;, id);</span>
+<span class="nc" id="L115">    }</span>
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page&lt;QuestionDTO&gt; getQuestionsByUserId(Integer userId, Pageable pageable) {
+<span class="nc" id="L120">        log.debug(&quot;Getting questions by user ID: {} with pagination: {}&quot;, userId, pageable);</span>
+        
+<span class="nc" id="L122">        Page&lt;Question&gt; questionPage = questionRepository.findByUserId(userId, pageable);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (questionPage.isEmpty()) {</span>
+<span class="nc" id="L124">            log.warn(&quot;No questions found for user ID: {}&quot;, userId);</span>
+        }
+        
+<span class="nc" id="L127">        return questionPage.map(questionMapper::toDto);</span>
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;QuestionDTO&gt; getQuestionsByUserId(Integer userId) {
+<span class="nc" id="L133">        log.debug(&quot;Getting questions by user ID: {} without pagination&quot;, userId);</span>
+        
+<span class="nc" id="L135">        List&lt;Question&gt; questions = questionRepository.findByUserId(userId);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (questions.isEmpty()) {</span>
+<span class="nc" id="L137">            log.warn(&quot;No questions found for user ID: {}&quot;, userId);</span>
+<span class="nc" id="L138">            throw new QuestionNotFoundException(&quot;No questions found for userId: &quot; + userId);</span>
+        }
+        
+<span class="nc" id="L141">        return questionMapper.toDtoList(questions);</span>
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page&lt;QuestionDTO&gt; searchQuestions(Map&lt;String, String&gt; filters, Pageable pageable) {
+<span class="nc" id="L147">        log.debug(&quot;Searching questions with filters: {} and pagination: {}&quot;, filters, pageable);</span>
+        
+<span class="nc" id="L149">        Specification&lt;Question&gt; spec = buildSpecificationFromFilters(filters);</span>
+<span class="nc" id="L150">        Page&lt;Question&gt; questionPage = questionRepository.findAll(spec, pageable);</span>
+        
+<span class="nc" id="L152">        return questionPage.map(questionMapper::toDto);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;QuestionDTO&gt; getQuestionsBySubTypeLevelMarks(String subject, QType type, String level, String marks) {
+<span class="nc" id="L158">        log.debug(&quot;Getting questions by subject: {}, type: {}, level: {}, marks: {}&quot;, subject, type, level, marks);</span>
+        
+<span class="nc bnc" id="L160" title="All 8 branches missed.">        if (subject == null &amp;&amp; type == null &amp;&amp; level == null &amp;&amp; marks == null) {</span>
+<span class="nc" id="L161">            log.error(&quot;At least one filter field must be provided&quot;);</span>
+<span class="nc" id="L162">            throw new InvalidQuestionException(&quot;At least one filter field (subject, type, level, marks) must be provided.&quot;);</span>
+        }
+        
+<span class="nc" id="L165">        Map&lt;String, String&gt; filters = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (StringUtils.hasText(subject)) filters.put(&quot;subject&quot;, subject);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (StringUtils.hasText(String.valueOf(type))) filters.put(&quot;type&quot;, String.valueOf(type));</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (StringUtils.hasText(level)) filters.put(&quot;level&quot;, level);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if (StringUtils.hasText(marks)) filters.put(&quot;marks&quot;, marks);</span>
+        
+<span class="nc" id="L171">        Specification&lt;Question&gt; spec = buildSpecificationFromFilters(filters);</span>
+<span class="nc" id="L172">        List&lt;Question&gt; questions = questionRepository.findAll(spec);</span>
+        
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (questions.isEmpty()) {</span>
+<span class="nc" id="L175">            log.warn(&quot;No questions found for the given criteria&quot;);</span>
+<span class="nc" id="L176">            throw new QuestionNotFoundException(&quot;No questions found for the given criteria.&quot;);</span>
+        }
+        
+<span class="nc" id="L179">        return questionMapper.toDtoList(questions);</span>
+    }
+    
+    /**
+     * Build a JPA Specification from a map of filters
+     */
+    private Specification&lt;Question&gt; buildSpecificationFromFilters(Map&lt;String, String&gt; filters) {
+<span class="nc" id="L186">        Specification&lt;Question&gt; spec = Specification.where(null);</span>
+        
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        for (Map.Entry&lt;String, String&gt; entry : filters.entrySet()) {</span>
+<span class="nc" id="L189">            String key = entry.getKey();</span>
+<span class="nc" id="L190">            String value = entry.getValue();</span>
+            
+<span class="nc bnc" id="L192" title="All 2 branches missed.">            if (StringUtils.hasText(value)) {</span>
+<span class="nc" id="L193">                spec = spec.and((root, query, cb) -&gt; cb.equal(root.get(key), value));</span>
+            }
+<span class="nc" id="L195">        }</span>
+<span class="nc" id="L196">        return spec;</span>
+    }
+
+    @Override
+    @Transactional
+    public List&lt;QuestionDTO&gt; createQuestionsBulk(@Valid BulkQuestionDTO bulkDTO) {
+<span class="nc" id="L202">        log.debug(&quot;Bulk creating questions for subject: {}, userId: {}, class: {}&quot;,</span>
+<span class="nc" id="L203">                bulkDTO.getSubject(), bulkDTO.getUserId(), bulkDTO.getStudentClass());</span>
+
+        // Check if user exists
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (!userRepository.existsById(Long.valueOf(bulkDTO.getUserId()))) {</span>
+<span class="nc" id="L207">            log.error(&quot;User with ID {} does not exist&quot;, bulkDTO.getUserId());</span>
+<span class="nc" id="L208">            throw new InvalidQuestionException(&quot;User with userId &quot; + bulkDTO.getUserId() + &quot; does not exist.&quot;);</span>
+        }
+
+        // Check if questions list is empty
+<span class="nc bnc" id="L212" title="All 4 branches missed.">        if (bulkDTO.getQuestions() == null || bulkDTO.getQuestions().isEmpty()) {</span>
+<span class="nc" id="L213">            log.error(&quot;No questions provided in bulk request&quot;);</span>
+<span class="nc" id="L214">            throw new InvalidQuestionException(&quot;At least one question is required.&quot;);</span>
+        }
+
+        // Validate each question for essential fields (example: questionText, type, level, option1, option2, answer)
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        for (SingleQuestionDTO single : bulkDTO.getQuestions()) {</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            if (isBlank(single.getQuestionText()) ||</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">                    isBlank(String.valueOf(single.getType())) ||</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                    isBlank(single.getLevel()) ||</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                    isBlank(String.valueOf(single.getMarks()))) {</span>
+<span class="nc" id="L223">                log.error(&quot;Missing required fields: questionText, type, level, or marks: {}&quot;, single);</span>
+<span class="nc" id="L224">                throw new InvalidQuestionException(&quot;Each question must have questionText, type, level, and marks.&quot;);</span>
+            }
+
+// Validate options and answer based on descriptive flag
+<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (!single.isDescriptive()) {</span>
+<span class="nc bnc" id="L229" title="All 6 branches missed.">                if (isBlank(single.getOption1()) || isBlank(single.getOption2()) || isBlank(single.getAnswer())) {</span>
+<span class="nc" id="L230">                    log.error(&quot;MCQ question is missing option1, option2, or answer: {}&quot;, single);</span>
+<span class="nc" id="L231">                    throw new InvalidQuestionException(&quot;MCQ questions must have option1, option2, and answer.&quot;);</span>
+                }
+            }
+<span class="nc" id="L234">        }</span>
+
+<span class="nc" id="L236">        List&lt;QuestionDTO&gt; createdQuestions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        for (SingleQuestionDTO single : bulkDTO.getQuestions()) {</span>
+<span class="nc" id="L238">            QuestionDTO dto = new QuestionDTO();</span>
+<span class="nc" id="L239">            dto.setSubject(bulkDTO.getSubject());</span>
+<span class="nc" id="L240">            dto.setUserId(bulkDTO.getUserId());</span>
+<span class="nc" id="L241">            dto.setStudentClass(bulkDTO.getStudentClass());</span>
+<span class="nc" id="L242">            dto.setUnit(bulkDTO.getUnit());</span>
+<span class="nc" id="L243">            dto.setChapter(bulkDTO.getChapter());</span>
+<span class="nc" id="L244">            dto.setTopic(bulkDTO.getTopic());</span>
+<span class="nc" id="L245">            dto.setQuestionText(single.getQuestionText());</span>
+<span class="nc" id="L246">            dto.setType(single.getType());</span>
+<span class="nc" id="L247">            dto.setLevel(single.getLevel());</span>
+<span class="nc" id="L248">            dto.setMarks(single.getMarks());</span>
+<span class="nc" id="L249">            dto.setOption1(single.getOption1());</span>
+<span class="nc" id="L250">            dto.setOption2(single.getOption2());</span>
+<span class="nc" id="L251">            dto.setOption3(single.getOption3());</span>
+<span class="nc" id="L252">            dto.setOption4(single.getOption4());</span>
+<span class="nc" id="L253">            dto.setAnswer(single.getAnswer());</span>
+<span class="nc" id="L254">            dto.setHintAndSol(single.getHintAndSol());</span>
+<span class="nc" id="L255">            dto.setDescriptive(single.isDescriptive());</span>
+<span class="nc" id="L256">            dto.setMultiOptions(single.isMultiOptions());</span>
+
+
+<span class="nc" id="L259">            Question question = questionMapper.toEntity(dto);</span>
+<span class="nc" id="L260">            Question saved = questionRepository.save(question);</span>
+<span class="nc" id="L261">            createdQuestions.add(questionMapper.toDto(saved));</span>
+<span class="nc" id="L262">        }</span>
+<span class="nc" id="L263">        return createdQuestions;</span>
+    }
+
+    // Utility method to check for blank strings
+    private boolean isBlank(String s) {
+<span class="nc bnc" id="L268" title="All 4 branches missed.">        return s == null || s.trim().isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

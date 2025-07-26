@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PatternMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.PaperPattern</a> &gt; <span class="el_source">PatternMapper.java</span></div><h1>PatternMapper.java</h1><pre class="source lang-java linenums">package com.spring.jwt.PaperPattern;
+
+import com.spring.jwt.entity.PaperPattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+@Component
+<span class="nc" id="L7">@RequiredArgsConstructor</span>
+public
+class PatternMapper {
+    public PaperPatternDto toDto(PaperPattern paperPattern){
+<span class="nc bnc" id="L11" title="All 2 branches missed.">        if(paperPattern==null){</span>
+<span class="nc" id="L12">            return null;</span>
+<span class="nc" id="L13">        }        PaperPatternDto dto = new PaperPatternDto();</span>
+<span class="nc" id="L14">        dto.setPaperPatternId(paperPattern.getPaperPatternId());</span>
+<span class="nc" id="L15">        dto.setType(paperPattern.getType());</span>
+<span class="nc" id="L16">        dto.setMarks(paperPattern.getMarks());</span>
+<span class="nc" id="L17">        dto.setPatternName(paperPattern.getPatternName());</span>
+<span class="nc" id="L18">        dto.setSubject(paperPattern.getSubject());</span>
+<span class="nc" id="L19">        dto.setNoOfQuestion(paperPattern.getNoOfQuestion());</span>
+<span class="nc" id="L20">        dto.setRequiredQuestion(paperPattern.getRequiredQuestion());</span>
+<span class="nc" id="L21">        dto.setNegativeMarks(paperPattern.getNegativeMarks());</span>
+<span class="nc" id="L22">        return dto;</span>
+    }    public PaperPattern toEntity(PaperPatternDto dto){
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        if(dto==null){</span>
+<span class="nc" id="L25">            return null;</span>
+<span class="nc" id="L26">        }        PaperPattern paperPattern = new PaperPattern();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if(dto.getPaperPatternId()!=null){</span>
+<span class="nc" id="L28">            paperPattern.setPaperPatternId(dto.getPaperPatternId());</span>
+<span class="nc" id="L29">        }        paperPattern.setPatternName(dto.getPatternName());</span>
+<span class="nc" id="L30">        paperPattern.setSubject(dto.getSubject());</span>
+<span class="nc" id="L31">        paperPattern.setType(dto.getType());</span>
+<span class="nc" id="L32">        paperPattern.setNoOfQuestion(dto.getNoOfQuestion());</span>
+<span class="nc" id="L33">        paperPattern.setRequiredQuestion(dto.getRequiredQuestion());</span>
+<span class="nc" id="L34">        paperPattern.setMarks(dto.getMarks());</span>
+<span class="nc" id="L35">        paperPattern.setNegativeMarks(dto.getNegativeMarks());</span>
+<span class="nc" id="L36">        return paperPattern;    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

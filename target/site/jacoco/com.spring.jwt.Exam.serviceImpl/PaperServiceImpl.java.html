@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.serviceImpl</a> &gt; <span class="el_source">PaperServiceImpl.java</span></div><h1>PaperServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.serviceImpl;
+
+import com.spring.jwt.Exam.Dto.*;
+import com.spring.jwt.Exam.entity.NegativeMarks;
+import com.spring.jwt.Exam.entity.Paper;
+import com.spring.jwt.Exam.entity.PaperQuestion;
+import com.spring.jwt.Exam.repository.PaperRepository;
+import com.spring.jwt.Exam.service.PaperService;
+import com.spring.jwt.PaperPattern.PaperPatternRepository;
+import com.spring.jwt.Question.QuestionRepository;
+import com.spring.jwt.dto.PageResponseDto;
+import com.spring.jwt.entity.PaperPattern;
+import com.spring.jwt.entity.Question;
+import com.spring.jwt.Question.QuestionDTO;
+import com.spring.jwt.entity.enum01.EventType;
+import com.spring.jwt.exception.InvalidPaginationParameterException;
+import com.spring.jwt.exception.PaperFetchException;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+
+
+@Service
+<span class="nc" id="L32">public class PaperServiceImpl implements PaperService {</span>
+
+    @Autowired
+    private PaperRepository paperRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private PaperPatternRepository paperPatternRepository;
+
+
+    private PaperDTO toDTO(Paper entity) {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (entity == null) return null;</span>
+
+<span class="nc" id="L47">        PaperDTO dto = new PaperDTO();</span>
+<span class="nc" id="L48">        dto.setPaperId(entity.getPaperId());</span>
+<span class="nc" id="L49">        dto.setTitle(entity.getTitle());</span>
+<span class="nc" id="L50">        dto.setDescription(entity.getDescription());</span>
+<span class="nc" id="L51">        dto.setStartTime(entity.getStartTime());</span>
+<span class="nc" id="L52">        dto.setEndTime(entity.getEndTime());</span>
+<span class="nc" id="L53">        dto.setIsLive(entity.getIsLive());</span>
+<span class="nc" id="L54">        dto.setStudentClass(entity.getStudentClass());</span>
+<span class="nc" id="L55">        dto.setResultDate(entity.getResultDate());</span>
+
+        // Safely set paperPatternId
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (entity.getPaperPattern() != null) {</span>
+<span class="nc" id="L59">            dto.setPaperPatternId(entity.getPaperPattern().getPaperPatternId());</span>
+<span class="nc" id="L60">            dto.setPatternName(entity.getPaperPattern().getPatternName());</span>
+        }
+
+        // Set Question IDs
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (entity.getPaperQuestions() != null) {</span>
+<span class="nc" id="L65">            dto.setQuestions(</span>
+<span class="nc" id="L66">                    entity.getPaperQuestions().stream()</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                            .map(pq -&gt; pq.getQuestion() != null ? pq.getQuestion().getQuestionId() : null)</span>
+<span class="nc" id="L68">                            .collect(Collectors.toList())</span>
+            );
+        }
+
+<span class="nc" id="L72">        return dto;</span>
+    }
+
+    private PaperDTO1 toDTO2(Paper entity) {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (entity == null) return null;</span>
+
+<span class="nc" id="L78">        PaperDTO1 dto = new PaperDTO1();</span>
+<span class="nc" id="L79">        dto.setPaperId(entity.getPaperId());</span>
+<span class="nc" id="L80">        dto.setTitle(entity.getTitle());</span>
+<span class="nc" id="L81">        dto.setDescription(entity.getDescription());</span>
+<span class="nc" id="L82">        dto.setStartTime(entity.getStartTime());</span>
+<span class="nc" id="L83">        dto.setEndTime(entity.getEndTime());</span>
+<span class="nc" id="L84">        dto.setIsLive(entity.getIsLive());</span>
+<span class="nc" id="L85">        dto.setStudentClass(entity.getStudentClass());</span>
+
+        // Paper pattern info
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (entity.getPaperPattern() != null) {</span>
+<span class="nc" id="L89">            dto.setPaperPatternId(entity.getPaperPattern().getPaperPatternId());</span>
+<span class="nc" id="L90">            dto.setPatternName(entity.getPaperPattern().getPatternName());</span>
+        }
+
+<span class="nc" id="L93">        dto.setResultDate(entity.getResultDate());</span>
+
+        // Map question IDs
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (entity.getPaperQuestions() != null) {</span>
+<span class="nc" id="L97">            dto.setQuestions(</span>
+<span class="nc" id="L98">                    entity.getPaperQuestions().stream()</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                            .map(pq -&gt; pq.getQuestion() != null ? pq.getQuestion().getQuestionId() : null)</span>
+<span class="nc" id="L100">                            .collect(Collectors.toList())</span>
+            );
+        }
+
+        // Map negative marks
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        if (entity.getNegativeMarksList() != null &amp;&amp; !entity.getNegativeMarksList().isEmpty()) {</span>
+<span class="nc" id="L106">            dto.setNegativeMarksList(</span>
+<span class="nc" id="L107">                    entity.getNegativeMarksList().stream()</span>
+<span class="nc" id="L108">                            .map(nm -&gt; NegativeMarksDTO.builder()</span>
+<span class="nc" id="L109">                                    .questionId(nm.getQuestionId())</span>
+<span class="nc" id="L110">                                    .negativeMark(nm.getNegativeMark())</span>
+<span class="nc" id="L111">                                    .build())</span>
+<span class="nc" id="L112">                            .collect(Collectors.toList())</span>
+            );
+        }
+
+<span class="nc" id="L116">        return dto;</span>
+    }
+
+    private Paper toEntity(PaperDTO dto) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (dto == null) return null;</span>
+
+<span class="nc" id="L122">        Paper entity = new Paper();</span>
+<span class="nc" id="L123">        entity.setPaperId(dto.getPaperId());</span>
+<span class="nc" id="L124">        entity.setTitle(dto.getTitle());</span>
+<span class="nc" id="L125">        entity.setDescription(dto.getDescription());</span>
+<span class="nc" id="L126">        entity.setStartTime(dto.getStartTime());</span>
+<span class="nc" id="L127">        entity.setEndTime(dto.getEndTime());</span>
+<span class="nc" id="L128">        entity.setIsLive(dto.getIsLive());</span>
+<span class="nc" id="L129">        entity.setStudentClass(dto.getStudentClass());</span>
+<span class="nc" id="L130">        entity.setResultDate(dto.getResultDate());</span>
+
+
+        // Set PaperPattern from ID
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (dto.getPaperPatternId() != null) {</span>
+<span class="nc" id="L135">            PaperPattern pattern = paperPatternRepository.findById(dto.getPaperPatternId())</span>
+<span class="nc" id="L136">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper pattern not found with id: &quot; + dto.getPaperPatternId()));</span>
+<span class="nc" id="L137">            entity.setPaperPattern(pattern);</span>
+        }
+
+        // Set Questions
+<span class="nc bnc" id="L141" title="All 4 branches missed.">        if (dto.getQuestions() != null &amp;&amp; !dto.getQuestions().isEmpty()) {</span>
+<span class="nc" id="L142">            List&lt;PaperQuestion&gt; paperQuestions = dto.getQuestions().stream().map(qId -&gt; {</span>
+<span class="nc" id="L143">                PaperQuestion pq = new PaperQuestion();</span>
+<span class="nc" id="L144">                pq.setPaper(entity);</span>
+<span class="nc" id="L145">                pq.setQuestion(</span>
+<span class="nc" id="L146">                        questionRepository.findById(qId)</span>
+<span class="nc" id="L147">                                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Question not found with id: &quot; + qId))</span>
+                );
+<span class="nc" id="L149">                return pq;</span>
+<span class="nc" id="L150">            }).collect(Collectors.toList());</span>
+<span class="nc" id="L151">            entity.setPaperQuestions(paperQuestions);</span>
+        }
+        // Set Negative Marks
+<span class="nc bnc" id="L154" title="All 4 branches missed.">        if (dto.getNegativeMarksList() != null &amp;&amp; !dto.getNegativeMarksList().isEmpty()) {</span>
+<span class="nc" id="L155">            List&lt;NegativeMarks&gt; negativeMarksList = dto.getNegativeMarksList().stream().map(nmDto -&gt; {</span>
+<span class="nc" id="L156">                NegativeMarks nm = new NegativeMarks();</span>
+<span class="nc" id="L157">                nm.setQuestionId(nmDto.getQuestionId());</span>
+<span class="nc" id="L158">                nm.setNegativeMark(nmDto.getNegativeMark());</span>
+<span class="nc" id="L159">                nm.setPaper(entity); // Link back to Paper</span>
+<span class="nc" id="L160">                return nm;</span>
+<span class="nc" id="L161">            }).collect(Collectors.toList());</span>
+<span class="nc" id="L162">            entity.setNegativeMarksList(negativeMarksList);</span>
+        }
+
+<span class="nc" id="L165">        return entity;</span>
+    }
+
+
+    private QuestionDTO toQuestionDTO(PaperQuestion pq) {
+<span class="nc bnc" id="L170" title="All 4 branches missed.">        if (pq == null || pq.getQuestion() == null) return null;</span>
+<span class="nc" id="L171">        QuestionDTO dto = new QuestionDTO();</span>
+<span class="nc" id="L172">        dto.setQuestionId(pq.getQuestion().getQuestionId());</span>
+<span class="nc" id="L173">        dto.setQuestionText(pq.getQuestion().getQuestionText());</span>
+<span class="nc" id="L174">        dto.setType(pq.getQuestion().getType());</span>
+<span class="nc" id="L175">        dto.setSubject(pq.getQuestion().getSubject());</span>
+<span class="nc" id="L176">        dto.setLevel(pq.getQuestion().getLevel());</span>
+<span class="nc" id="L177">        dto.setMarks(pq.getQuestion().getMarks());</span>
+<span class="nc" id="L178">        dto.setUserId(pq.getQuestion().getUserId());</span>
+<span class="nc" id="L179">        dto.setOption1(pq.getQuestion().getOption1());</span>
+<span class="nc" id="L180">        dto.setOption2(pq.getQuestion().getOption2());</span>
+<span class="nc" id="L181">        dto.setOption3(pq.getQuestion().getOption3());</span>
+<span class="nc" id="L182">        dto.setOption4(pq.getQuestion().getOption4());</span>
+<span class="nc" id="L183">        dto.setStudentClass(pq.getQuestion().getStudentClass());</span>
+<span class="nc" id="L184">        dto.setAnswer(pq.getQuestion().getAnswer());</span>
+<span class="nc" id="L185">        return dto;</span>
+    }
+    // Entity to PaperWithQuestionsDTO
+    private PaperWithQuestionsDTO toDTO01(Paper entity) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (entity == null) return null;</span>
+<span class="nc" id="L190">        PaperWithQuestionsDTO dto = new PaperWithQuestionsDTO();</span>
+<span class="nc" id="L191">        dto.setPaperId(entity.getPaperId());</span>
+<span class="nc" id="L192">        dto.setTitle(entity.getTitle());</span>
+<span class="nc" id="L193">        dto.setDescription(entity.getDescription());</span>
+<span class="nc" id="L194">        dto.setStartTime(entity.getStartTime());</span>
+<span class="nc" id="L195">        dto.setEndTime(entity.getEndTime());</span>
+<span class="nc" id="L196">        dto.setIsLive(entity.getIsLive());</span>
+<span class="nc" id="L197">        dto.setStudentClass(entity.getStudentClass());</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (entity.getPaperQuestions() != null) {</span>
+<span class="nc" id="L199">            dto.setQuestions(entity.getPaperQuestions().stream()</span>
+<span class="nc" id="L200">                    .map(pq -&gt; toQuestionNoAnswerDTO(pq.getQuestion()))</span>
+<span class="nc" id="L201">                    .collect(Collectors.toList())</span>
+            );
+        }
+<span class="nc" id="L204">        return dto;</span>
+    }
+
+    // Helper: Question -&gt; QuestionNoAnswerDTO
+    private QuestionNoAnswerDTO toQuestionNoAnswerDTO(Question q) {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (q == null) return null;</span>
+<span class="nc" id="L210">        QuestionNoAnswerDTO dto = new QuestionNoAnswerDTO();</span>
+<span class="nc" id="L211">        dto.setQuestionId(Long.valueOf(q.getQuestionId()));</span>
+<span class="nc" id="L212">        dto.setQuestionText(q.getQuestionText());</span>
+<span class="nc" id="L213">        dto.setType((q.getType()));</span>
+<span class="nc" id="L214">        dto.setSubject(q.getSubject());</span>
+<span class="nc" id="L215">        dto.setLevel(q.getLevel());</span>
+<span class="nc" id="L216">        dto.setMarks(Double.valueOf(q.getMarks()));</span>
+<span class="nc" id="L217">        dto.setUserId(Long.valueOf(q.getUserId()));</span>
+<span class="nc" id="L218">        dto.setOption1(q.getOption1());</span>
+<span class="nc" id="L219">        dto.setOption2(q.getOption2());</span>
+<span class="nc" id="L220">        dto.setOption3(q.getOption3());</span>
+<span class="nc" id="L221">        dto.setOption4(q.getOption4());</span>
+<span class="nc" id="L222">        dto.setStudentClass(q.getStudentClass());</span>
+<span class="nc" id="L223">        return dto;</span>
+    }
+
+    public PaperWithQuestionsWithAnsDTO toPaperWithQuestionsDTO(Paper paper, List&lt;QuestionDTO&gt; questionDTOs) {
+<span class="nc" id="L227">        return PaperWithQuestionsWithAnsDTO.builder()</span>
+<span class="nc" id="L228">                .paperId(paper.getPaperId())</span>
+<span class="nc" id="L229">                .title(paper.getTitle())</span>
+<span class="nc" id="L230">                .description(paper.getDescription())</span>
+<span class="nc" id="L231">                .startTime(paper.getStartTime())</span>
+<span class="nc" id="L232">                .endTime(paper.getEndTime())</span>
+<span class="nc" id="L233">                .isLive(paper.getIsLive())</span>
+<span class="nc" id="L234">                .studentClass(paper.getStudentClass())</span>
+<span class="nc" id="L235">                .questions(questionDTOs)</span>
+<span class="nc" id="L236">                .build();</span>
+    }
+
+
+    @Override
+    public PaperDTO createPaper(PaperDTO paperDTO) {
+        // 1. Fetch PaperPattern
+<span class="nc" id="L243">        Integer patternId = paperDTO.getPaperPatternId();</span>
+<span class="nc" id="L244">        PaperPattern pattern = paperPatternRepository.findById(patternId)</span>
+<span class="nc" id="L245">                .orElseThrow(() -&gt; new PaperFetchException(&quot;Invalid PaperPattern ID: &quot; + patternId));</span>
+
+        // 2. Validate question count
+<span class="nc" id="L248">        int requiredQuestions = pattern.getNoOfQuestion();</span>
+<span class="nc" id="L249">        List&lt;Integer&gt; questionIds = paperDTO.getQuestions();</span>
+<span class="nc bnc" id="L250" title="All 4 branches missed.">        if (questionIds == null || questionIds.size() != requiredQuestions) {</span>
+<span class="nc" id="L251">            throw new PaperFetchException(</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                    &quot;Number of questions (&quot; + (questionIds == null ? 0 : questionIds.size()) +</span>
+                            &quot;) does not match the required (&quot; + requiredQuestions + &quot;) by the pattern.&quot;
+            );
+        }
+
+        // 3. Validate sum of marks
+<span class="nc" id="L258">        int totalMarks = 0;</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">        for (Integer qId : questionIds) {</span>
+<span class="nc" id="L260">            Question question = questionRepository.findById(qId)</span>
+<span class="nc" id="L261">                    .orElseThrow(() -&gt; new PaperFetchException(&quot;Invalid Question ID: &quot; + qId));</span>
+<span class="nc" id="L262">            totalMarks += question.getMarks(); // assuming getMarks() returns int</span>
+<span class="nc" id="L263">        }</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">        if (totalMarks != pattern.getMarks()) {</span>
+<span class="nc" id="L265">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L266">                    &quot;Sum of question marks (&quot; + totalMarks + &quot;) does not match pattern marks (&quot; + pattern.getMarks() + &quot;).&quot;</span>
+            );
+        }
+        // 3.5 Validate Negative Marks only for valid questionIds
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if (paperDTO.getNegativeMarksList() != null) {</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">            for (NegativeMarksDTO nmDto : paperDTO.getNegativeMarksList()) {</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                if (!questionIds.contains(nmDto.getQuestionId())) {</span>
+<span class="nc" id="L273">                    throw new PaperFetchException(&quot;Negative mark set for invalid question ID: &quot; + nmDto.getQuestionId());</span>
+                }
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                if (nmDto.getNegativeMark() &lt; 0) {</span>
+<span class="nc" id="L276">                    throw new PaperFetchException(&quot;Negative mark value must not be negative: &quot; + nmDto.getNegativeMark());</span>
+                }
+<span class="nc" id="L278">            }</span>
+        }
+
+        // 4. Proceed with saving
+<span class="nc" id="L282">        Paper paper = toEntity(paperDTO);</span>
+<span class="nc" id="L283">        paper.setPaperPattern(pattern);</span>
+<span class="nc" id="L284">        Paper saved = paperRepository.save(paper);</span>
+
+
+<span class="nc" id="L287">        return toDTO(saved);</span>
+    }
+
+    @Override
+    public PaperDTO1 getPaper(Integer id) {
+<span class="nc" id="L292">        Paper paper = paperRepository.findById(id)</span>
+<span class="nc" id="L293">                .orElseThrow(() -&gt; new PaperFetchException(&quot;Paper not found with id: &quot; + id));</span>
+<span class="nc" id="L294">        return toDTO2(paper);</span>
+    }
+
+    @Override
+    public PageResponseDto&lt;PaperDTO&gt; getAllPapers(int page, int size) {
+<span class="nc bnc" id="L299" title="All 4 branches missed.">        if (page &lt; 0 || size &lt;= 0) {</span>
+<span class="nc" id="L300">            throw new InvalidPaginationParameterException(&quot;Page number must be &gt;= 0 and size &gt; 0&quot;);</span>
+        }
+<span class="nc" id="L302">        Pageable pageable = PageRequest.of(page, size, Sort.by(&quot;paperId&quot;).descending());</span>
+<span class="nc" id="L303">        Page&lt;Paper&gt; paperPage = paperRepository.findAll(pageable);</span>
+
+<span class="nc" id="L305">        List&lt;PaperDTO&gt; paperDTOs = paperPage.getContent().stream()</span>
+<span class="nc" id="L306">                .map(this::toDTO)</span>
+<span class="nc" id="L307">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L309">        return new PageResponseDto&lt;&gt;(</span>
+                paperDTOs,
+<span class="nc" id="L311">                paperPage.getNumber(),</span>
+<span class="nc" id="L312">                paperPage.getSize(),</span>
+<span class="nc" id="L313">                paperPage.getTotalElements(),</span>
+<span class="nc" id="L314">                paperPage.getTotalPages()</span>
+        );
+    }
+
+
+    @Override
+    public PaperDTO updatePaper(Integer id, PaperDTO paperDTO) {
+<span class="nc" id="L321">        Paper paper = paperRepository.findById(id)</span>
+<span class="nc" id="L322">                .orElseThrow(() -&gt; new PaperFetchException(&quot;Paper not found with id: &quot; + id));</span>
+<span class="nc" id="L323">        paper.setTitle(paperDTO.getTitle());</span>
+<span class="nc" id="L324">        paper.setDescription(paperDTO.getDescription());</span>
+<span class="nc" id="L325">        paper.setStartTime(paperDTO.getStartTime());</span>
+<span class="nc" id="L326">        paper.setEndTime(paperDTO.getEndTime());</span>
+<span class="nc" id="L327">        paper.setIsLive(paperDTO.getIsLive());</span>
+<span class="nc" id="L328">        paper.setStudentClass(paperDTO.getStudentClass());</span>
+        // PaperQuestions update logic can be added if needed
+<span class="nc" id="L330">        Paper saved = paperRepository.save(paper);</span>
+<span class="nc" id="L331">        return toDTO(saved);</span>
+    }
+
+    @Override
+    public void deletePaper(Integer id) {
+<span class="nc" id="L336">        Paper paper = paperRepository.findById(id)</span>
+<span class="nc" id="L337">                .orElseThrow(() -&gt; new PaperFetchException(&quot;Paper not found with id: &quot; + id));</span>
+<span class="nc" id="L338">        paperRepository.delete(paper);</span>
+<span class="nc" id="L339">    }</span>
+
+    @Override
+    public PaperWithQuestionsDTO getPaperWithQuestions(Integer paperId) {
+<span class="nc" id="L343">        Paper paper = paperRepository.findById(paperId)</span>
+<span class="nc" id="L344">                .orElseThrow(() -&gt; new PaperFetchException(&quot;Paper not found with id: &quot; + paperId));</span>
+<span class="nc" id="L345">        return toDTO01(paper);</span>
+    }
+
+
+    @Override
+    public List&lt;PaperDTO&gt; getLivePapers(String studentClass) {
+        try {
+<span class="nc" id="L352">            List&lt;Paper&gt; livePapers = paperRepository.findByIsLiveTrueAndStudentClass(studentClass);</span>
+<span class="nc bnc" id="L353" title="All 4 branches missed.">            if (livePapers == null || livePapers.isEmpty()) {</span>
+<span class="nc" id="L354">                throw new PaperFetchException(&quot;No live papers found for studentClass: &quot; + studentClass);</span>
+            }
+<span class="nc" id="L356">            return livePapers.stream()</span>
+<span class="nc" id="L357">                    .map(this::toDTO)</span>
+<span class="nc" id="L358">                    .collect(Collectors.toList());</span>
+<span class="nc" id="L359">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L360">            throw e;</span>
+<span class="nc" id="L361">        } catch (Exception e) {</span>
+<span class="nc" id="L362">            throw new RuntimeException(&quot;Failed to fetch live papers.&quot;, e);</span>
+        }
+    }
+
+    /**
+     * Fetch paper with all associated questions including answers and solutions.
+     */
+    @Override
+    public PaperWithQuestionsAndAnswersDTO getPaperWithSolutions(Integer paperId) {
+<span class="nc" id="L371">        Paper paper = paperRepository.findById(paperId)</span>
+<span class="nc" id="L372">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper not found with ID: &quot; + paperId));</span>
+
+<span class="nc" id="L374">        List&lt;Question&gt; questions = questionRepository.findQuestionsByPaperId(paperId);</span>
+
+<span class="nc bnc" id="L376" title="All 4 branches missed.">        if (questions == null || questions.isEmpty()) {</span>
+<span class="nc" id="L377">            System.out.println(&quot;No questions found for paperId: &quot; + paperId);</span>
+        } else {
+<span class="nc" id="L379">            System.out.println(&quot;Questions found: &quot; + questions.size());</span>
+        }
+
+<span class="nc" id="L382">        List&lt;QuestionWithAnswerDTO&gt; questionDTOs = questions.stream()</span>
+<span class="nc" id="L383">                .map(this::mapToQuestionWithAnswerDTO)</span>
+<span class="nc" id="L384">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L386">        return PaperWithQuestionsAndAnswersDTO.builder()</span>
+<span class="nc" id="L387">                .paperId(paper.getPaperId())</span>
+<span class="nc" id="L388">                .title(paper.getTitle())</span>
+<span class="nc" id="L389">                .description(paper.getDescription())</span>
+<span class="nc" id="L390">                .startTime(paper.getStartTime())</span>
+<span class="nc" id="L391">                .endTime(paper.getEndTime())</span>
+<span class="nc" id="L392">                .isLive(paper.getIsLive())</span>
+<span class="nc" id="L393">                .studentClass(paper.getStudentClass())</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">                .paperPatternId(paper.getPaperPattern() != null ? paper.getPaperPattern().getPaperPatternId() : null)</span>
+<span class="nc" id="L395">                .questions(questionDTOs)</span>
+<span class="nc" id="L396">                .build();</span>
+    }
+
+
+
+
+    /**
+     * Maps a Question entity to a DTO including answer and hint.
+     */
+    private QuestionWithAnswerDTO mapToQuestionWithAnswerDTO(Question question) {
+<span class="nc bnc" id="L406" title="All 2 branches missed.">        if (question == null) {</span>
+<span class="nc" id="L407">            return null;</span>
+        }
+
+<span class="nc" id="L410">        return QuestionWithAnswerDTO.builder()</span>
+<span class="nc" id="L411">                .questionId(question.getQuestionId())</span>
+<span class="nc" id="L412">                .questionText(question.getQuestionText())</span>
+<span class="nc" id="L413">                .type(question.getType())</span>
+<span class="nc" id="L414">                .subject(question.getSubject())</span>
+<span class="nc" id="L415">                .unit(question.getUnit())</span>
+<span class="nc" id="L416">                .chapter(question.getChapter())</span>
+<span class="nc" id="L417">                .topic(question.getTopic())</span>
+<span class="nc" id="L418">                .level(question.getLevel())</span>
+<span class="nc" id="L419">                .marks(question.getMarks())</span>
+<span class="nc" id="L420">                .userId(question.getUserId())</span>
+<span class="nc" id="L421">                .option1(question.getOption1())</span>
+<span class="nc" id="L422">                .option2(question.getOption2())</span>
+<span class="nc" id="L423">                .option3(question.getOption3())</span>
+<span class="nc" id="L424">                .option4(question.getOption4())</span>
+<span class="nc" id="L425">                .studentClass(question.getStudentClass())</span>
+<span class="nc" id="L426">                .isDescriptive(question.isDescriptive())</span>
+<span class="nc" id="L427">                .isMultiOptions(question.isMultiOptions())</span>
+<span class="nc" id="L428">                .answer(question.getAnswer())</span>
+<span class="nc" id="L429">                .hintAndSol(question.getHintAndSol())</span>
+<span class="nc" id="L430">                .build();</span>
+    }
+
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

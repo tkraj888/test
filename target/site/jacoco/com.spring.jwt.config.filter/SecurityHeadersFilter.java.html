@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityHeadersFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.config.filter</a> &gt; <span class="el_source">SecurityHeadersFilter.java</span></div><h1>SecurityHeadersFilter.java</h1><pre class="source lang-java linenums">package com.spring.jwt.config.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+/**
+ * Filter to add security headers that aren't directly configurable
+ * in the current Spring Security version
+ */
+@Component
+<span class="nc" id="L15">public class SecurityHeadersFilter implements Filter, Ordered {</span>
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+<span class="nc" id="L20">        HttpServletResponse httpResponse = (HttpServletResponse) response;</span>
+
+<span class="nc" id="L22">        httpResponse.setHeader(&quot;Referrer-Policy&quot;, &quot;strict-origin-when-cross-origin&quot;);</span>
+
+<span class="nc" id="L24">        httpResponse.setHeader(&quot;Content-Security-Policy&quot;, </span>
+            &quot;default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; &quot; +
+            &quot;style-src 'self' 'unsafe-inline'; img-src 'self' data:; &quot; +
+            &quot;font-src 'self'; connect-src 'self'; frame-src 'self'; &quot; +
+            &quot;object-src 'none'; base-uri 'self'&quot;);
+
+<span class="nc" id="L30">        httpResponse.setHeader(&quot;X-Content-Type-Options&quot;, &quot;nosniff&quot;);</span>
+
+<span class="nc" id="L32">        httpResponse.setHeader(&quot;X-Frame-Options&quot;, &quot;DENY&quot;);</span>
+
+<span class="nc" id="L34">        httpResponse.setHeader(&quot;X-XSS-Protection&quot;, &quot;1; mode=block&quot;);</span>
+
+<span class="nc" id="L36">        httpResponse.setHeader(&quot;Strict-Transport-Security&quot;, &quot;max-age=31536000; includeSubDomains&quot;);</span>
+
+<span class="nc" id="L38">        httpResponse.setHeader(&quot;Cache-Control&quot;, &quot;no-store, no-cache, must-revalidate, max-age=0&quot;);</span>
+<span class="nc" id="L39">        httpResponse.setHeader(&quot;Pragma&quot;, &quot;no-cache&quot;);</span>
+
+<span class="nc" id="L41">        chain.doFilter(request, response);</span>
+<span class="nc" id="L42">    }</span>
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+
+<span class="nc" id="L47">    }</span>
+
+    @Override
+    public void destroy() {
+<span class="nc" id="L51">    }</span>
+    
+    @Override
+    public int getOrder() {
+<span class="nc" id="L55">        return Ordered.HIGHEST_PRECEDENCE + 50;</span>
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

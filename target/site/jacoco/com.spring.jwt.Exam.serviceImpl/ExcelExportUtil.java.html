@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExcelExportUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.serviceImpl</a> &gt; <span class="el_source">ExcelExportUtil.java</span></div><h1>ExcelExportUtil.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.serviceImpl;
+
+import com.spring.jwt.Exam.Dto.ExamSessionShowResultDto;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.List;
+
+<span class="nc" id="L12">public class ExcelExportUtil {</span>
+
+    public static InputStream exportExamSessionsToExcel(List&lt;ExamSessionShowResultDto&gt; sessions) throws Exception {
+<span class="nc" id="L15">        String[] headers = {</span>
+                &quot;Session ID&quot;, &quot;User ID&quot;, &quot;Student Name&quot;, &quot;Paper ID&quot;, &quot;Paper Title&quot;,
+                &quot;Student Class&quot;, &quot;Start Time&quot;, &quot;End Time&quot;, &quot;Result Date&quot;,
+                &quot;Score&quot;, &quot;Negative Count&quot;, &quot;Negative Score&quot;
+        };
+
+<span class="nc" id="L21">        Workbook workbook = new XSSFWorkbook();</span>
+<span class="nc" id="L22">        Sheet sheet = workbook.createSheet(&quot;ExamSessions&quot;);</span>
+
+        // Create header
+<span class="nc" id="L25">        Row headerRow = sheet.createRow(0);</span>
+<span class="nc" id="L26">        CellStyle headerStyle = workbook.createCellStyle();</span>
+<span class="nc" id="L27">        Font font = workbook.createFont();</span>
+<span class="nc" id="L28">        font.setBold(true);</span>
+<span class="nc" id="L29">        headerStyle.setFont(font);</span>
+
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        for (int i = 0; i &lt; headers.length; i++) {</span>
+<span class="nc" id="L32">            Cell cell = headerRow.createCell(i);</span>
+<span class="nc" id="L33">            cell.setCellValue(headers[i]);</span>
+<span class="nc" id="L34">            cell.setCellStyle(headerStyle);</span>
+        }
+
+        // Fill data
+<span class="nc" id="L38">        int rowNum = 1;</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        for (ExamSessionShowResultDto dto : sessions) {</span>
+<span class="nc" id="L40">            Row row = sheet.createRow(rowNum++);</span>
+<span class="nc" id="L41">            row.createCell(0).setCellValue(dto.getSessionId());</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            row.createCell(1).setCellValue(dto.getUserId() != null ? dto.getUserId() : 0);</span>
+<span class="nc" id="L43">            row.createCell(2).setCellValue(dto.getStudentName());</span>
+<span class="nc" id="L44">            row.createCell(3).setCellValue(dto.getPaperId());</span>
+<span class="nc" id="L45">            row.createCell(4).setCellValue(dto.getTitle());</span>
+<span class="nc" id="L46">            row.createCell(5).setCellValue(dto.getStudentClass());</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            row.createCell(6).setCellValue(dto.getStartTime() != null ? dto.getStartTime().toString() : &quot;&quot;);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            row.createCell(7).setCellValue(dto.getEndTime() != null ? dto.getEndTime().toString() : &quot;&quot;);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">            row.createCell(8).setCellValue(dto.getResultDate() != null ? dto.getResultDate().toString() : &quot;&quot;);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            row.createCell(9).setCellValue(dto.getScore() != null ? dto.getScore() : 0);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            row.createCell(10).setCellValue(dto.getNegativeCount() != null ? dto.getNegativeCount() : 0);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            row.createCell(11).setCellValue(dto.getNegativeScore() != null ? dto.getNegativeScore() : 0);</span>
+<span class="nc" id="L53">        }</span>
+
+        // Auto-size columns
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        for (int i = 0; i &lt; headers.length; i++) {</span>
+<span class="nc" id="L57">            sheet.autoSizeColumn(i);</span>
+        }
+
+        // Convert workbook to InputStream
+<span class="nc" id="L61">        ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="nc" id="L62">        workbook.write(out);</span>
+<span class="nc" id="L63">        workbook.close();</span>
+<span class="nc" id="L64">        return new ByteArrayInputStream(out.toByteArray());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamSessionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.controller</a> &gt; <span class="el_source">ExamSessionController.java</span></div><h1>ExamSessionController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.controller;
+
+import com.spring.jwt.Exam.entity.ExamSession;
+import com.spring.jwt.Exam.repository.ExamSessionRepository;
+import com.spring.jwt.Exam.service.ExamSessionSchedulingService;
+import com.spring.jwt.dto.ResponseDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Controller for managing exam session scheduling
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/exam/session&quot;)
+<span class="nc" id="L22">@RequiredArgsConstructor</span>
+<span class="nc" id="L23">@Slf4j</span>
+public class ExamSessionController {
+
+    private final ExamSessionRepository examSessionRepository;
+    private final ExamSessionSchedulingService examSessionSchedulingService;
+
+    /**
+     * Schedule result processing for an exam session
+     * 
+     * @param sessionId The ID of the exam session
+     * @param resultDateTime The date and time when results should be processed
+     * @return Response indicating success or failure
+     */
+    @PostMapping(&quot;/{sessionId}/schedule&quot;)
+    public ResponseEntity&lt;ResponseDto&lt;Map&lt;String, Object&gt;&gt;&gt; scheduleExamResultProcessing(
+            @PathVariable Integer sessionId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime resultDateTime) {
+        
+<span class="nc" id="L41">        log.info(&quot;Received request to schedule exam result processing for session ID: {} at {}&quot;, </span>
+                sessionId, resultDateTime);
+        
+<span class="nc" id="L44">        ExamSession session = examSessionRepository.findById(sessionId).orElse(null);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (session == null) {</span>
+<span class="nc" id="L46">            return ResponseEntity.badRequest().body(</span>
+<span class="nc" id="L47">                    ResponseDto.error(&quot;Exam session not found&quot;, &quot;No session found with ID: &quot; + sessionId));</span>
+        }
+        
+<span class="nc" id="L50">        boolean scheduled = examSessionSchedulingService.scheduleExamResultProcessing(sessionId, resultDateTime);</span>
+        
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (scheduled) {</span>
+<span class="nc" id="L53">            Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L54">            data.put(&quot;sessionId&quot;, sessionId);</span>
+<span class="nc" id="L55">            data.put(&quot;resultDateTime&quot;, resultDateTime);</span>
+<span class="nc" id="L56">            data.put(&quot;scheduled&quot;, true);</span>
+            
+<span class="nc" id="L58">            return ResponseEntity.ok(ResponseDto.success(</span>
+                    &quot;Exam result processing scheduled successfully&quot;, data));
+        } else {
+<span class="nc" id="L61">            return ResponseEntity.badRequest().body(</span>
+<span class="nc" id="L62">                    ResponseDto.error(&quot;Failed to schedule exam result processing&quot;, </span>
+                            &quot;Could not schedule processing for session ID: &quot; + sessionId));
+        }
+    }
+    
+    /**
+     * Manually trigger checking for pending results
+     * 
+     * @return Response indicating that the check was triggered
+     */
+    @PostMapping(&quot;/check-pending&quot;)
+    public ResponseEntity&lt;ResponseDto&lt;Void&gt;&gt; checkPendingResults() {
+<span class="nc" id="L74">        log.info(&quot;Manually triggering check for pending exam results&quot;);</span>
+        
+<span class="nc" id="L76">        examSessionSchedulingService.checkForPendingResults();</span>
+        
+<span class="nc" id="L78">        return ResponseEntity.ok(ResponseDto.success(</span>
+                &quot;Check for pending exam results triggered&quot;, null));
+    }
+    
+    /**
+     * Manually reinitialize all scheduled tasks
+     * 
+     * @return Response indicating that reinitialization was triggered
+     */
+    @PostMapping(&quot;/reinitialize&quot;)
+    public ResponseEntity&lt;ResponseDto&lt;Void&gt;&gt; reinitializeScheduledTasks() {
+<span class="nc" id="L89">        log.info(&quot;Manually triggering reinitialization of scheduled tasks&quot;);</span>
+        
+<span class="nc" id="L91">        examSessionSchedulingService.initializeScheduledTasks();</span>
+        
+<span class="nc" id="L93">        return ResponseEntity.ok(ResponseDto.success(</span>
+                &quot;Reinitialization of scheduled tasks triggered&quot;, null));
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

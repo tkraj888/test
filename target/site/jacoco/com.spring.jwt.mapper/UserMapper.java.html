@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.mapper</a> &gt; <span class="el_source">UserMapper.java</span></div><h1>UserMapper.java</h1><pre class="source lang-java linenums">package com.spring.jwt.mapper;
+
+import com.spring.jwt.dto.UserDTO;
+import com.spring.jwt.entity.Role;
+import com.spring.jwt.entity.User;
+import com.spring.jwt.utils.EncryptionUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
+
+<span class="nc" id="L13">@Slf4j</span>
+@Component
+<span class="nc" id="L15">@RequiredArgsConstructor</span>
+public class UserMapper {
+
+    private final EncryptionUtil encryptionUtil;
+
+    public UserDTO toDTO(User user) {
+<span class="nc bnc" id="L21" title="All 2 branches missed.">        if (user == null) {</span>
+<span class="nc" id="L22">            return null;</span>
+        }
+
+        try {
+<span class="nc" id="L26">            UserDTO dto = new UserDTO();</span>
+<span class="nc" id="L27">            dto.setEmail(user.getEmail());</span>
+<span class="nc" id="L28">            dto.setUserId(user.getId().toString());</span>
+            
+            // Set the roles as a Set&lt;String&gt;
+<span class="nc bnc" id="L31" title="All 2 branches missed.">            if (user.getRoles() != null) {</span>
+<span class="nc" id="L32">                dto.setRoles(user.getRoles().stream()</span>
+<span class="nc" id="L33">                    .map(Role::getName)</span>
+<span class="nc" id="L34">                    .collect(Collectors.toSet()));</span>
+            }
+
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (user.getFirstName() != null) {</span>
+<span class="nc" id="L38">                String decrypted = ensureDecrypted(user.getFirstName());</span>
+<span class="nc" id="L39">                dto.setFirstName(decrypted);</span>
+<span class="nc" id="L40">                log.debug(&quot;Mapped firstName: {} -&gt; {}&quot;, user.getFirstName().substring(0, Math.min(10, user.getFirstName().length())), </span>
+<span class="nc" id="L41">                         decrypted.substring(0, Math.min(10, decrypted.length())));</span>
+            }
+            
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (user.getLastName() != null) {</span>
+<span class="nc" id="L45">                String decrypted = ensureDecrypted(user.getLastName());</span>
+<span class="nc" id="L46">                dto.setLastName(decrypted);</span>
+<span class="nc" id="L47">                log.debug(&quot;Mapped lastName: {} -&gt; {}&quot;, user.getLastName().substring(0, Math.min(10, user.getLastName().length())), </span>
+<span class="nc" id="L48">                         decrypted.substring(0, Math.min(10, decrypted.length())));</span>
+            }
+            
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (user.getAddress() != null) {</span>
+<span class="nc" id="L52">                String decrypted = ensureDecrypted(user.getAddress());</span>
+<span class="nc" id="L53">                dto.setAddress(decrypted);</span>
+<span class="nc" id="L54">                log.debug(&quot;Mapped address: {} -&gt; {}&quot;, user.getAddress().substring(0, Math.min(10, user.getAddress().length())), </span>
+<span class="nc" id="L55">                         decrypted.substring(0, Math.min(10, decrypted.length())));</span>
+            }
+
+            
+<span class="nc" id="L59">            dto.setMobileNumber(user.getMobileNumber());</span>
+            
+<span class="nc" id="L61">            log.debug(&quot;Mapped User to DTO - email: {}&quot;, dto.getEmail());</span>
+<span class="nc" id="L62">            return dto;</span>
+<span class="nc" id="L63">        } catch (Exception e) {</span>
+<span class="nc" id="L64">            log.error(&quot;Error converting User to DTO: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L65">            throw new RuntimeException(&quot;Error converting User to DTO&quot;, e);</span>
+        }
+    }
+
+    public User toEntity(UserDTO dto) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (dto == null) {</span>
+<span class="nc" id="L71">            return null;</span>
+        }
+
+        try {
+<span class="nc" id="L75">            User user = new User();</span>
+<span class="nc" id="L76">            user.setEmail(dto.getEmail());</span>
+<span class="nc" id="L77">            user.setFirstName(dto.getFirstName());</span>
+<span class="nc" id="L78">            user.setLastName(dto.getLastName());</span>
+<span class="nc" id="L79">            user.setAddress(dto.getAddress());</span>
+<span class="nc" id="L80">            user.setMobileNumber(dto.getMobileNumber());</span>
+            
+<span class="nc" id="L82">            return user;</span>
+<span class="nc" id="L83">        } catch (Exception e) {</span>
+<span class="nc" id="L84">            log.error(&quot;Error converting DTO to User: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L85">            throw new RuntimeException(&quot;Error converting DTO to User&quot;, e);</span>
+        }
+    }
+    
+    /**
+     * Ensures a string is decrypted if it appears to be encrypted
+     */
+    private String ensureDecrypted(String value) {
+<span class="nc bnc" id="L93" title="All 4 branches missed.">        if (value == null || value.isEmpty()) {</span>
+<span class="nc" id="L94">            return value;</span>
+        }
+        
+        try {
+<span class="nc" id="L98">            String decrypted = encryptionUtil.decrypt(value);</span>
+<span class="nc" id="L99">            log.debug(&quot;Decryption result: {} chars -&gt; {} chars&quot;, value.length(), decrypted.length());</span>
+<span class="nc" id="L100">            return decrypted;</span>
+<span class="nc" id="L101">        } catch (Exception e) {</span>
+<span class="nc" id="L102">            log.warn(&quot;Decryption failed, returning original value: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L103">            return value;</span>
+        }
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

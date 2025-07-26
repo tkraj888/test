@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RateLimitingFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.config.filter</a> &gt; <span class="el_source">RateLimitingFilter.java</span></div><h1>RateLimitingFilter.java</h1><pre class="source lang-java linenums">package com.spring.jwt.config.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Filter to prevent brute force attacks by implementing rate limiting
+ */
+@Component
+<span class="nc" id="L19">public class RateLimitingFilter implements Filter, Ordered {</span>
+
+    private static final int STATUS_TOO_MANY_REQUESTS = 429;
+
+<span class="nc" id="L23">    private final Map&lt;String, RequestCounter&gt; requestCounts = new ConcurrentHashMap&lt;&gt;();</span>
+    
+    @Value(&quot;${app.rate-limiting.enabled:true}&quot;)
+    private boolean rateLimitingEnabled;
+
+    @Value(&quot;${app.rate-limiting.limit-for-period:20}&quot;)
+    private int limitForPeriod;
+
+    @Value(&quot;${app.rate-limiting.refresh-period:60}&quot;)
+    private int refreshPeriod;
+    
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (!rateLimitingEnabled) {</span>
+<span class="nc" id="L39">            chain.doFilter(request, response);</span>
+<span class="nc" id="L40">            return;</span>
+        }
+        
+<span class="nc" id="L43">        HttpServletRequest httpRequest = (HttpServletRequest) request;</span>
+<span class="nc" id="L44">        HttpServletResponse httpResponse = (HttpServletResponse) response;</span>
+
+<span class="nc" id="L46">        String path = httpRequest.getRequestURI();</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (isPublicEndpoint(path)) {</span>
+<span class="nc" id="L48">            chain.doFilter(request, response);</span>
+<span class="nc" id="L49">            return;</span>
+        }
+
+<span class="nc" id="L52">        String clientIp = getClientIp(httpRequest);</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (isRateLimitExceeded(clientIp)) {</span>
+<span class="nc" id="L55">            httpResponse.setStatus(STATUS_TOO_MANY_REQUESTS);</span>
+<span class="nc" id="L56">            httpResponse.setContentType(&quot;application/json&quot;);</span>
+<span class="nc" id="L57">            httpResponse.getWriter().write(&quot;{\&quot;error\&quot;:\&quot;Rate limit exceeded. Please try again later.\&quot;}&quot;);</span>
+<span class="nc" id="L58">            return;</span>
+        }
+
+<span class="nc" id="L61">        chain.doFilter(request, response);</span>
+<span class="nc" id="L62">    }</span>
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+
+<span class="nc" id="L67">    }</span>
+
+    @Override
+    public void destroy() {
+
+<span class="nc" id="L72">    }</span>
+    
+    @Override
+    public int getOrder() {
+<span class="nc" id="L76">        return Ordered.HIGHEST_PRECEDENCE + 30;</span>
+    }
+    
+    /**
+     * Checks if the request from the given IP exceeds the rate limit
+     */
+    private boolean isRateLimitExceeded(String clientIp) {
+<span class="nc" id="L83">        long now = System.currentTimeMillis();</span>
+
+<span class="nc" id="L85">        RequestCounter counter = requestCounts.computeIfAbsent(clientIp, k -&gt; new RequestCounter());</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (now - counter.getWindowStart() &gt; TimeUnit.SECONDS.toMillis(refreshPeriod)) {</span>
+<span class="nc" id="L88">            counter.reset(now);</span>
+        }
+
+<span class="nc" id="L91">        counter.incrementCount();</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        return counter.getCount() &gt; limitForPeriod;</span>
+    }
+    
+    /**
+     * Gets the client IP address from the request
+     */
+    private String getClientIp(HttpServletRequest request) {
+<span class="nc" id="L100">        String xForwardedFor = request.getHeader(&quot;X-Forwarded-For&quot;);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">        if (xForwardedFor != null &amp;&amp; !xForwardedFor.isEmpty()) {</span>
+<span class="nc" id="L102">            return xForwardedFor.split(&quot;,&quot;)[0].trim();</span>
+        }
+<span class="nc" id="L104">        return request.getRemoteAddr();</span>
+    }
+    
+    /**
+     * Checks if the given path is a public endpoint that should not be rate limited
+     */
+    private boolean isPublicEndpoint(String path) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        return path.startsWith(&quot;/api/public/&quot;) || </span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">               path.startsWith(&quot;/swagger-ui&quot;) || </span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">               path.startsWith(&quot;/v3/api-docs&quot;) ||</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">               path.startsWith(&quot;/h2-console&quot;) ||</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">               path.equals(&quot;/api/auth/login&quot;) || </span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">               path.equals(&quot;/api/auth/register&quot;) ||</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">               path.equals(&quot;/api/auth/refresh&quot;);</span>
+    }
+    
+    /**
+     * Class to track request counts in a time window
+     */
+    private static class RequestCounter {
+        private long windowStart;
+        private int count;
+        
+<span class="nc" id="L127">        public RequestCounter() {</span>
+<span class="nc" id="L128">            this.windowStart = System.currentTimeMillis();</span>
+<span class="nc" id="L129">            this.count = 0;</span>
+<span class="nc" id="L130">        }</span>
+        
+        public void reset(long timestamp) {
+<span class="nc" id="L133">            this.windowStart = timestamp;</span>
+<span class="nc" id="L134">            this.count = 0;</span>
+<span class="nc" id="L135">        }</span>
+        
+        public void incrementCount() {
+<span class="nc" id="L138">            this.count++;</span>
+<span class="nc" id="L139">        }</span>
+        
+        public int getCount() {
+<span class="nc" id="L142">            return count;</span>
+        }
+        
+        public long getWindowStart() {
+<span class="nc" id="L146">            return windowStart;</span>
+        }
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

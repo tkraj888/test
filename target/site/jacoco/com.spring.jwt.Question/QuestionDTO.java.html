@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Question</a> &gt; <span class="el_source">QuestionDTO.java</span></div><h1>QuestionDTO.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Question;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.spring.jwt.entity.enum01.QType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+<span class="nc bnc" id="L15" title="All 150 branches missed.">@Data</span>
+<span class="nc" id="L16">@Builder</span>
+<span class="nc" id="L17">@NoArgsConstructor</span>
+<span class="nc" id="L18">@AllArgsConstructor</span>
+@Schema(description = &quot;Data Transfer Object for Question operations&quot;)
+public class QuestionDTO {
+
+    @Schema(description = &quot;Unique identifier of the question&quot;, example = &quot;1&quot;)
+<span class="nc" id="L23">    private Integer questionId;</span>
+
+    @NotBlank(message = &quot;Question text is required&quot;)
+    @Size(min = 5, max = 1000, message = &quot;Question text must be between 5 and 1000 characters&quot;)
+    @Schema(description = &quot;The text of the question&quot;, example = &quot;What is the capital of France?&quot;, required = true)
+<span class="nc" id="L28">    private String questionText;</span>
+
+    @NotNull(message = &quot;Question type is required&quot;)
+    @Schema(description = &quot;Type of question (e.g., MCQ, Essay)&quot;, example = &quot;MCQ&quot;, required = true)
+<span class="nc" id="L32">    private QType type;</span>
+
+    @NotBlank(message = &quot;Subject is required&quot;)
+    @Schema(description = &quot;Subject the question belongs to&quot;, example = &quot;Geography&quot;, required = true)
+<span class="nc" id="L36">    private String subject;</span>
+    @NotBlank
+<span class="nc" id="L38">    private String unit;</span>
+    @NotBlank
+<span class="nc" id="L40">    private String chapter;</span>
+    @NotBlank
+<span class="nc" id="L42">    private String topic;</span>
+
+    @NotBlank(message = &quot;Level is required&quot;)
+    @Schema(description = &quot;Difficulty level of the question&quot;, example = &quot;Medium&quot;, required = true)
+<span class="nc" id="L46">    private String level;</span>
+
+    @NotNull(message = &quot;Marks are required&quot;)
+    @Min(value = 1, message = &quot;Marks must be at least 1&quot;)
+    @Schema(description = &quot;Marks assigned to the question&quot;, example = &quot;5&quot;, required = true)
+<span class="nc" id="L51">    private Integer marks;</span>
+
+    @NotNull(message = &quot;User ID is required&quot;)
+    @Schema(description = &quot;ID of the user who created the question&quot;, example = &quot;1&quot;, required = true)
+<span class="nc" id="L55">    private Integer userId;</span>
+
+    @Size(min = 1, max = 500, message = &quot;Option 1 must be between 1 and 500 characters&quot;)
+    @Schema(description = &quot;First option for multiple choice questions&quot;, example = &quot;Paris&quot;, required = true)
+<span class="nc" id="L59">    private String option1;</span>
+
+    @Size(min = 1, max = 500, message = &quot;Option 2 must be between 1 and 500 characters&quot;)
+    @Schema(description = &quot;Second option for multiple choice questions&quot;, example = &quot;London&quot;, required = true)
+<span class="nc" id="L63">    private String option2;</span>
+
+    @Schema(description = &quot;Third option for multiple choice questions&quot;, example = &quot;Berlin&quot;)
+<span class="nc" id="L66">    private String option3;</span>
+
+    @Schema(description = &quot;Fourth option for multiple choice questions&quot;, example = &quot;Rome&quot;)
+<span class="nc" id="L69">    private String option4;</span>
+
+    @Schema(description = &quot;Correct answer to the question&quot;, example = &quot;Paris&quot;, required = true)
+<span class="nc" id="L72">    private String answer;</span>
+
+    @JsonProperty(&quot;studentClass&quot;)
+    @NotBlank(message = &quot;Student class is required&quot;)
+<span class="nc" id="L76">    private String StudentClass;</span>
+
+    @JsonProperty(&quot;descriptive&quot;)
+<span class="nc" id="L79">    private boolean isDescriptive;</span>
+
+    @JsonProperty(&quot;MultiOptions&quot;)
+<span class="nc" id="L82">    private boolean isMultiOptions;</span>
+
+    @Schema(description = &quot;Correct answer to hint And Sol&quot;, example = &quot;Paris&quot;)
+<span class="nc" id="L85">    private String hintAndSol;</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Paper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.entity</a> &gt; <span class="el_source">Paper.java</span></div><h1>Paper.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.entity;
+
+
+import com.spring.jwt.entity.PaperPattern;
+import com.spring.jwt.entity.Question;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+<span class="nc bnc" id="L15" title="All 102 branches missed.">@Data</span>
+<span class="nc" id="L16">@NoArgsConstructor</span>
+<span class="nc" id="L17">@AllArgsConstructor</span>
+public class Paper {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+<span class="nc" id="L21">    private Integer paperId;</span>
+
+<span class="nc" id="L23">    private String title;</span>
+<span class="nc" id="L24">    private String description;</span>
+<span class="nc" id="L25">    private String studentClass;</span>
+<span class="nc" id="L26">    private LocalDateTime startTime;</span>
+<span class="nc" id="L27">    private LocalDateTime endTime;</span>
+<span class="nc" id="L28">    private Boolean isLive;</span>
+<span class="nc" id="L29">    private LocalDateTime resultDate;</span>
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = &quot;paper_pattern_id&quot;)
+<span class="nc" id="L33">    private PaperPattern paperPattern;</span>
+
+
+    @OneToMany(mappedBy = &quot;paper&quot;, cascade = CascadeType.ALL)
+<span class="nc" id="L37">    private List&lt;PaperQuestion&gt; paperQuestions;</span>
+
+    @OneToMany(mappedBy = &quot;paper&quot;, fetch = FetchType.LAZY) // or EAGER as needed
+    private List&lt;Question&gt; questions;
+
+    @OneToMany(mappedBy = &quot;paper&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+<span class="nc" id="L43">    private List&lt;NegativeMarks&gt; negativeMarksList;</span>
+
+
+
+
+    public List&lt;Question&gt; getQuestions() {
+<span class="nc" id="L49">        return questions;</span>
+    }
+
+    public void setQuestions(List&lt;Question&gt; questions) {
+<span class="nc" id="L53">        this.questions = questions;</span>
+<span class="nc" id="L54">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

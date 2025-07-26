@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.controller;
+
+import com.spring.jwt.jwt.JwtConfig;
+import com.spring.jwt.utils.BaseResponseDTO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+<span class="nc" id="L25">@RequiredArgsConstructor</span>
+<span class="nc" id="L26">@Slf4j</span>
+public class AuthController {
+
+    private final JwtConfig jwtConfig;
+
+    private static final String REFRESH_TOKEN_COOKIE_NAME = &quot;refresh_token&quot;;
+    
+    /**
+     * Logout endpoint that clears the refresh token cookie and invalidates the session
+     */
+    @PostMapping(&quot;/logout&quot;)
+    public ResponseEntity&lt;BaseResponseDTO&gt; logout(HttpServletRequest request, HttpServletResponse response) {
+<span class="nc" id="L38">        log.info(&quot;Processing logout request&quot;);</span>
+
+<span class="nc" id="L40">        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, &quot;&quot;);</span>
+<span class="nc" id="L41">        cookie.setMaxAge(0);</span>
+<span class="nc" id="L42">        cookie.setPath(&quot;/&quot;);</span>
+<span class="nc" id="L43">        cookie.setHttpOnly(true);</span>
+<span class="nc" id="L44">        cookie.setSecure(true);</span>
+<span class="nc" id="L45">        response.addCookie(cookie);</span>
+
+<span class="nc" id="L47">        SecurityContextHolder.clearContext();</span>
+        
+<span class="nc" id="L49">        BaseResponseDTO responseDTO = new BaseResponseDTO();</span>
+<span class="nc" id="L50">        responseDTO.setCode(String.valueOf(HttpStatus.OK.value()));</span>
+<span class="nc" id="L51">        responseDTO.setMessage(&quot;Logout successful&quot;);</span>
+        
+<span class="nc" id="L53">        return ResponseEntity.ok(responseDTO);</span>
+    }
+    
+    /**
+     * Test endpoint to check cookies in the request
+     */
+    @GetMapping(&quot;/check-cookies&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; checkCookies(HttpServletRequest request) {
+<span class="nc" id="L61">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L63">        Cookie[] cookies = request.getCookies();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (cookies != null) {</span>
+<span class="nc" id="L65">            response.put(&quot;cookieCount&quot;, cookies.length);</span>
+            
+<span class="nc" id="L67">            Map&lt;String, String&gt; cookieDetails = Arrays.stream(cookies)</span>
+<span class="nc" id="L68">                .collect(Collectors.toMap(</span>
+                    Cookie::getName,
+                    cookie -&gt; {
+<span class="nc" id="L71">                        String value = cookie.getValue();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                        if (value.length() &gt; 10) {</span>
+<span class="nc" id="L73">                            return value.substring(0, 5) + &quot;...&quot; + value.substring(value.length() - 5);</span>
+                        }
+<span class="nc" id="L75">                        return value;</span>
+                    }
+                ));
+            
+<span class="nc" id="L79">            response.put(&quot;cookies&quot;, cookieDetails);</span>
+
+<span class="nc" id="L81">            boolean hasRefreshToken = Arrays.stream(cookies)</span>
+<span class="nc" id="L82">                .anyMatch(cookie -&gt; REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName()));</span>
+            
+<span class="nc" id="L84">            response.put(&quot;hasRefreshToken&quot;, hasRefreshToken);</span>
+<span class="nc" id="L85">        } else {</span>
+<span class="nc" id="L86">            response.put(&quot;cookieCount&quot;, 0);</span>
+<span class="nc" id="L87">            response.put(&quot;cookies&quot;, Map.of());</span>
+<span class="nc" id="L88">            response.put(&quot;hasRefreshToken&quot;, false);</span>
+        }
+
+<span class="nc" id="L91">        Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L92">        request.getHeaderNames().asIterator().forEachRemaining(name -&gt; </span>
+<span class="nc" id="L93">            headers.put(name, request.getHeader(name))</span>
+        );
+<span class="nc" id="L95">        response.put(&quot;headers&quot;, headers);</span>
+        
+<span class="nc" id="L97">        return ResponseEntity.ok(response);</span>
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TokenBlacklistService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.jwt</a> &gt; <span class="el_source">TokenBlacklistService.java</span></div><h1>TokenBlacklistService.java</h1><pre class="source lang-java linenums">package com.spring.jwt.jwt;
+
+import com.spring.jwt.utils.SecurityAuditLogger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Service to manage blacklisted tokens to prevent token reuse
+ * This is a security feature used by major companies to prevent refresh token replay attacks
+ */
+@Service
+<span class="nc" id="L19">@Slf4j</span>
+<span class="nc" id="L20">public class TokenBlacklistService {</span>
+    
+    @Autowired(required = false)
+    private SecurityAuditLogger securityAuditLogger;
+
+<span class="nc" id="L25">    private final Map&lt;String, TokenInfo&gt; blacklistedTokens = new ConcurrentHashMap&lt;&gt;();</span>
+
+<span class="nc" id="L27">    private final AtomicInteger totalBlacklistedTokens = new AtomicInteger(0);</span>
+<span class="nc" id="L28">    private final AtomicInteger blacklistHits = new AtomicInteger(0);</span>
+    
+    /**
+     * Add a token to the blacklist
+     * @param tokenId The JWT ID (jti) to blacklist
+     * @param expirationTime When the token expires and can be removed from blacklist
+     * @param username The username associated with the token (if available)
+     * @param reason Why the token was blacklisted (logout, rotation, etc.)
+     */
+    public void blacklistToken(String tokenId, Instant expirationTime, String username, String reason) {
+<span class="nc" id="L38">        log.debug(&quot;Blacklisting token: {}&quot;, tokenId);</span>
+        
+<span class="nc" id="L40">        TokenInfo tokenInfo = new TokenInfo(expirationTime, username, reason, Instant.now());</span>
+<span class="nc" id="L41">        blacklistedTokens.put(tokenId, tokenInfo);</span>
+<span class="nc" id="L42">        totalBlacklistedTokens.incrementAndGet();</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (securityAuditLogger != null) {</span>
+<span class="nc" id="L45">            securityAuditLogger.logTokenEvent(&quot;BLACKLIST&quot;, username, maskTokenId(tokenId), true);</span>
+        }
+<span class="nc" id="L47">    }</span>
+    
+    /**
+     * Add a token to the blacklist
+     * @param tokenId The JWT ID (jti) to blacklist
+     * @param expirationTime When the token expires and can be removed from blacklist
+     */
+    public void blacklistToken(String tokenId, Instant expirationTime) {
+<span class="nc" id="L55">        blacklistToken(tokenId, expirationTime, &quot;unknown&quot;, &quot;token_rotation&quot;);</span>
+<span class="nc" id="L56">    }</span>
+    
+    /**
+     * Check if a token is blacklisted
+     * @param tokenId The JWT ID (jti) to check
+     * @return true if the token is blacklisted
+     */
+    public boolean isBlacklisted(String tokenId) {
+<span class="nc" id="L64">        boolean result = blacklistedTokens.containsKey(tokenId);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (result) {</span>
+<span class="nc" id="L66">            blacklistHits.incrementAndGet();</span>
+<span class="nc" id="L67">            TokenInfo info = blacklistedTokens.get(tokenId);</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (info != null) {</span>
+<span class="nc" id="L70">                info.incrementReuseAttempts();</span>
+
+<span class="nc" id="L72">                log.warn(&quot;Attempted reuse of blacklisted token ID: {}, user: {}, blacklisted at: {}, reuse attempts: {}&quot;,</span>
+<span class="nc" id="L73">                    maskTokenId(tokenId), info.getUsername(), info.getBlacklistedAt(), info.getReuseAttempts());</span>
+
+<span class="nc bnc" id="L75" title="All 4 branches missed.">                if (securityAuditLogger != null &amp;&amp; info.getReuseAttempts() &gt; 1) {</span>
+<span class="nc" id="L76">                    securityAuditLogger.logTokenEvent(&quot;REUSE_ATTEMPT&quot;, info.getUsername(), maskTokenId(tokenId), false);</span>
+                }
+            }
+        }
+<span class="nc" id="L80">        return result;</span>
+    }
+    
+    /**
+     * Clean up expired tokens from the blacklist every hour
+     */
+    @Scheduled(fixedRate = 3600000)
+    public void cleanupBlacklist() {
+<span class="nc" id="L88">        log.debug(&quot;Cleaning up token blacklist&quot;);</span>
+<span class="nc" id="L89">        Instant now = Instant.now();</span>
+<span class="nc" id="L90">        int initialSize = blacklistedTokens.size();</span>
+        
+<span class="nc" id="L92">        blacklistedTokens.entrySet().removeIf(entry -&gt; entry.getValue().getExpirationTime().isBefore(now));</span>
+        
+<span class="nc" id="L94">        int removedCount = initialSize - blacklistedTokens.size();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (removedCount &gt; 0) {</span>
+<span class="nc" id="L96">            log.info(&quot;Removed {} expired tokens from blacklist&quot;, removedCount);</span>
+        }
+<span class="nc" id="L98">    }</span>
+    
+    /**
+     * Get statistics about the token blacklist
+     */
+    public BlacklistStats getStats() {
+<span class="nc" id="L104">        return new BlacklistStats(</span>
+<span class="nc" id="L105">            blacklistedTokens.size(),</span>
+<span class="nc" id="L106">            totalBlacklistedTokens.get(),</span>
+<span class="nc" id="L107">            blacklistHits.get()</span>
+        );
+    }
+    
+    /**
+     * Extend the blacklisting period for a token 
+     * (useful for high-risk scenarios where a token needs to be blacklisted longer)
+     */
+    public void extendBlacklisting(String tokenId, long additionalHours) {
+<span class="nc" id="L116">        TokenInfo info = blacklistedTokens.get(tokenId);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (info != null) {</span>
+<span class="nc" id="L118">            Instant newExpiration = info.getExpirationTime().plus(additionalHours, ChronoUnit.HOURS);</span>
+<span class="nc" id="L119">            info.setExpirationTime(newExpiration);</span>
+<span class="nc" id="L120">            log.info(&quot;Extended blacklisting for token: {}, new expiration: {}&quot;, maskTokenId(tokenId), newExpiration);</span>
+        }
+<span class="nc" id="L122">    }</span>
+    
+    /**
+     * Mask token ID for logging (security)
+     */
+    private String maskTokenId(String tokenId) {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">        if (tokenId == null || tokenId.length() &lt; 8) {</span>
+<span class="nc" id="L129">            return &quot;***&quot;;</span>
+        }
+<span class="nc" id="L131">        int length = tokenId.length();</span>
+<span class="nc" id="L132">        return tokenId.substring(0, 3) + &quot;...&quot; + tokenId.substring(length - 3);</span>
+    }
+    
+    /**
+     * Information about a blacklisted token
+     */
+    private static class TokenInfo {
+        private Instant expirationTime;
+        private final String username;
+        private final String reason;
+        private final Instant blacklistedAt;
+<span class="nc" id="L143">        private int reuseAttempts = 0;</span>
+        
+<span class="nc" id="L145">        public TokenInfo(Instant expirationTime, String username, String reason, Instant blacklistedAt) {</span>
+<span class="nc" id="L146">            this.expirationTime = expirationTime;</span>
+<span class="nc" id="L147">            this.username = username;</span>
+<span class="nc" id="L148">            this.reason = reason;</span>
+<span class="nc" id="L149">            this.blacklistedAt = blacklistedAt;</span>
+<span class="nc" id="L150">        }</span>
+        
+        public Instant getExpirationTime() {
+<span class="nc" id="L153">            return expirationTime;</span>
+        }
+        
+        public void setExpirationTime(Instant expirationTime) {
+<span class="nc" id="L157">            this.expirationTime = expirationTime;</span>
+<span class="nc" id="L158">        }</span>
+        
+        public String getUsername() {
+<span class="nc" id="L161">            return username;</span>
+        }
+        
+        public String getReason() {
+<span class="nc" id="L165">            return reason;</span>
+        }
+        
+        public Instant getBlacklistedAt() {
+<span class="nc" id="L169">            return blacklistedAt;</span>
+        }
+        
+        public int getReuseAttempts() {
+<span class="nc" id="L173">            return reuseAttempts;</span>
+        }
+        
+        public void incrementReuseAttempts() {
+<span class="nc" id="L177">            this.reuseAttempts++;</span>
+<span class="nc" id="L178">        }</span>
+    }
+    
+    /**
+     * Statistics about the blacklist
+     */
+    public static class BlacklistStats {
+        private final int currentSize;
+        private final int totalBlacklisted;
+        private final int blacklistHits;
+        
+<span class="nc" id="L189">        public BlacklistStats(int currentSize, int totalBlacklisted, int blacklistHits) {</span>
+<span class="nc" id="L190">            this.currentSize = currentSize;</span>
+<span class="nc" id="L191">            this.totalBlacklisted = totalBlacklisted;</span>
+<span class="nc" id="L192">            this.blacklistHits = blacklistHits;</span>
+<span class="nc" id="L193">        }</span>
+        
+        public int getCurrentSize() {
+<span class="nc" id="L196">            return currentSize;</span>
+        }
+        
+        public int getTotalBlacklisted() {
+<span class="nc" id="L200">            return totalBlacklisted;</span>
+        }
+        
+        public int getBlacklistHits() {
+<span class="nc" id="L204">            return blacklistHits;</span>
+        }
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

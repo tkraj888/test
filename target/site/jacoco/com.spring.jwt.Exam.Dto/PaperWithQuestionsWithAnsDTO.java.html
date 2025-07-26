@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperWithQuestionsWithAnsDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.Dto</a> &gt; <span class="el_source">PaperWithQuestionsWithAnsDTO.java</span></div><h1>PaperWithQuestionsWithAnsDTO.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.Dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import com.spring.jwt.Question.QuestionDTO;
+<span class="nc bnc" id="L14" title="All 74 branches missed.">@Data</span>
+<span class="nc" id="L15">@Builder</span>
+<span class="nc" id="L16">@NoArgsConstructor</span>
+<span class="nc" id="L17">@AllArgsConstructor</span>
+@Schema(description = &quot;DTO for Paper with full Question details&quot;)
+public class PaperWithQuestionsWithAnsDTO {
+
+    @Schema(description = &quot;Unique identifier of the paper&quot;, example = &quot;1&quot;)
+<span class="nc" id="L22">    private Integer paperId;</span>
+
+    @Schema(description = &quot;Title of the paper&quot;, example = &quot;Midterm Exam&quot;)
+<span class="nc" id="L25">    private String title;</span>
+
+    @Schema(description = &quot;Description of the paper&quot;, example = &quot;Midterm exam for 10th grade&quot;)
+<span class="nc" id="L28">    private String description;</span>
+
+    @Schema(description = &quot;Start time of the paper&quot;, example = &quot;2025-06-23T10:00:00&quot;)
+<span class="nc" id="L31">    private LocalDateTime startTime;</span>
+
+    @Schema(description = &quot;End time of the paper&quot;, example = &quot;2025-06-23T12:00:00&quot;)
+<span class="nc" id="L34">    private LocalDateTime endTime;</span>
+
+    @Schema(description = &quot;Whether the paper is currently live&quot;, example = &quot;true&quot;)
+<span class="nc" id="L37">    private Boolean isLive;</span>
+
+    @Schema(description = &quot;Class for which the paper is intended&quot;, example = &quot;10th Grade&quot;)
+<span class="nc" id="L40">    private String studentClass;</span>
+
+    @Schema(description = &quot;List of question details included in the paper&quot;)
+<span class="nc" id="L43">    private List&lt;QuestionDTO&gt; questions;</span>
+
+    @Schema(description = &quot;isDescriptive type ture&quot;)
+<span class="nc" id="L46">    private boolean isDescriptive;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

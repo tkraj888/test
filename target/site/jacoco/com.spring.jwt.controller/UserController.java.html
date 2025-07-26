@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.controller</a> &gt; <span class="el_source">UserController.java</span></div><h1>UserController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.controller;
+
+import com.spring.jwt.dto.ResetPassword;
+import com.spring.jwt.dto.ResponseAllUsersDto;
+import com.spring.jwt.dto.UserDTO;
+import com.spring.jwt.dto.UserUpdateRequest;
+import com.spring.jwt.dto.UserProfileDTO;
+import com.spring.jwt.entity.User;
+import com.spring.jwt.jwt.JwtService;
+import com.spring.jwt.repository.UserRepository;
+import com.spring.jwt.service.UserService;
+import com.spring.jwt.utils.BaseResponseDTO;
+import com.spring.jwt.utils.EncryptionUtil;
+import com.spring.jwt.utils.ErrorResponseDto;
+import com.spring.jwt.utils.ResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+///////////////////////////////////////////////////////////////////////////////////
+//
+//      File Name    : UserController
+//      Description  : Used to perform user operation
+//      Author       : Ashutosh Shedge
+//      Date         : 28/04/2025
+//
+//////////////////////////////////////////////////////////////////////////////////
+@Tag(
+        name = &quot;User Management API&quot;,
+        description = &quot;APIs for user registration, profile management, and authentication operations&quot;
+)
+@RestController
+@RequestMapping(&quot;/api/v1/users&quot;)
+<span class="nc" id="L64">@RequiredArgsConstructor</span>
+@Validated
+<span class="nc" id="L66">@Slf4j</span>
+@CrossOrigin(origins = &quot;${app.cors.allowed-origins}&quot;, maxAge = 3600)
+public class UserController {
+
+    private final UserService userService;
+    private final UserRepository userRepository;
+    private final EncryptionUtil encryptionUtil;
+    private final JwtService jwtService;
+    
+    @Value(&quot;${app.url.password-reset}&quot;)
+    private String passwordResetUrl;
+
+///////////////////////////////////////////////////////////////////////////////////
+//
+//      File Name    : UserController
+//      Description  : Used to create user
+//      Author       : Ashutosh Shedge
+//      Date         : 28/04/2025
+//
+//////////////////////////////////////////////////////////////////////////////////
+    @Operation(
+            summary = &quot;Register a new user account&quot;,
+            description = &quot;Creates a new user account with the provided user details&quot;,
+            tags = {&quot;Authentication&quot;}
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;201&quot;,
+                    description = &quot;User account created successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;400&quot;,
+                    description = &quot;Invalid input or account already exists&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;500&quot;,
+                    description = &quot;Internal server error&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping(&quot;/register&quot;)
+    public ResponseEntity&lt;BaseResponseDTO&gt; registerUser(@Valid @RequestBody UserDTO userDTO) {
+<span class="nc" id="L113">        BaseResponseDTO response = userService.registerAccount(userDTO);</span>
+<span class="nc" id="L114">        return ResponseEntity.status(HttpStatus.CREATED).body(response);</span>
+    }
+
+
+////////////////////////////////////////////////////////////////////////////////////
+//
+//      File Name    : UserController
+//      Description  : Used to reset password
+//      Author       : Ashutosh Shedge
+//      Date         : 28/04/2025
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+    @Operation(
+            summary = &quot;Request password reset&quot;,
+            description = &quot;Sends a password reset link to the user's email address&quot;,
+            tags = {&quot;Authentication&quot;}
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;Password reset email sent successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;400&quot;,
+                    description = &quot;Invalid email address&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;404&quot;,
+                    description = &quot;User not found&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping(&quot;/password/forgot&quot;)
+    public ResponseEntity&lt;ResponseDto&gt; requestPasswordReset(
+            @RequestParam @Email(message = &quot;Invalid email format&quot;) @NotBlank(message = &quot;Email is required&quot;) String email,
+            HttpServletRequest request) {
+        
+<span class="nc" id="L157">        ResponseDto response = userService.handleForgotPassword(email, request.getServerName());</span>
+<span class="nc" id="L158">        return ResponseEntity.ok(response);</span>
+    }
+
+    @Operation(
+            summary = &quot;Get password reset page&quot;,
+            description = &quot;Returns the HTML form for password reset&quot;,
+            tags = {&quot;Authentication&quot;}
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;Password reset form returned successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;400&quot;,
+                    description = &quot;Invalid or expired token&quot;,
+                    content = @Content(
+                            mediaType = &quot;text/plain&quot;,
+                            schema = @Schema(type = &quot;string&quot;)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;500&quot;,
+                    description = &quot;Internal server error&quot;,
+                    content = @Content(
+                            mediaType = &quot;text/plain&quot;,
+                            schema = @Schema(type = &quot;string&quot;)
+                    )
+            )
+    }
+    )
+
+    @GetMapping(&quot;/password/reset&quot;)
+    public ResponseEntity&lt;String&gt; getResetPasswordPage(
+            @RequestParam @NotBlank(message = &quot;Token is required&quot;) String token) {
+        try {
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (!userService.validateResetToken(token)) {</span>
+<span class="nc" id="L195">                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(&quot;Invalid or expired token&quot;);</span>
+            }
+            
+<span class="nc" id="L198">            ClassPathResource resource = new ClassPathResource(&quot;templates/reset-password.html&quot;);</span>
+<span class="nc" id="L199">            String htmlContent = Files.readString(Paths.get(resource.getURI()), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L200">            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlContent);</span>
+<span class="nc" id="L201">        } catch (IOException e) {</span>
+<span class="nc" id="L202">            log.error(&quot;Error loading reset password template&quot;, e);</span>
+<span class="nc" id="L203">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(&quot;Error loading password reset form&quot;);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Reset password&quot;,
+            description = &quot;Resets the user's password using the provided token and new password&quot;,
+            tags = {&quot;Authentication&quot;}
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;Password reset successful&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;400&quot;,
+                    description = &quot;Invalid input, token expired, or password validation failed&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping(&quot;/password/reset&quot;)
+    public ResponseEntity&lt;ResponseDto&gt; resetPassword(@Valid @RequestBody ResetPassword request) {
+<span class="nc" id="L227">        ResponseDto response = userService.processPasswordUpdate(request);</span>
+<span class="nc" id="L228">        return ResponseEntity.ok(response);</span>
+    }
+
+
+///////////////////////////////////////////////////////////////////////////////////
+//
+//      File Name    : UserController
+//      Description  : Used to get all users
+//      Author       : Ashutosh Shedge
+//      Date         : 28/04/2025
+//
+//////////////////////////////////////////////////////////////////////////////////
+    @Operation(
+            summary = &quot;Get all users&quot;,
+            description = &quot;Returns a paginated list of all users with optional filtering&quot;,
+            tags = {&quot;User Management&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;Users list retrieved successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;403&quot;,
+                    description = &quot;Forbidden - Insufficient permissions&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping(&quot;getAllUsers&quot;)
+    public ResponseEntity&lt;ResponseAllUsersDto&gt; getAllUsers(
+            @RequestParam(defaultValue = &quot;0&quot;) @Min(value = 0, message = &quot;Page number cannot be negative&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) @Min(value = 1, message = &quot;Page size must be at least 1&quot;) int size) {
+        
+<span class="nc" id="L271">        Page&lt;UserDTO&gt; userPage = userService.getAllUsers(page, size);</span>
+
+<span class="nc" id="L273">        List&lt;UserDTO&gt; decryptedUsers = userPage.getContent().stream()</span>
+<span class="nc" id="L274">            .map(user -&gt; {</span>
+                try {
+<span class="nc bnc" id="L276" title="All 2 branches missed.">                    if (user.getFirstName() != null) {</span>
+<span class="nc" id="L277">                        user.setFirstName(encryptionUtil.decrypt(user.getFirstName()));</span>
+                    }
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                    if (user.getLastName() != null) {</span>
+<span class="nc" id="L280">                        user.setLastName(encryptionUtil.decrypt(user.getLastName()));</span>
+                    }
+<span class="nc bnc" id="L282" title="All 2 branches missed.">                    if (user.getAddress() != null) {</span>
+<span class="nc" id="L283">                        user.setAddress(encryptionUtil.decrypt(user.getAddress()));</span>
+                    }
+<span class="nc" id="L285">                } catch (Exception e) {</span>
+<span class="nc" id="L286">                    log.error(&quot;Error decrypting user data: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L287">                }</span>
+<span class="nc" id="L288">                return user;</span>
+            })
+<span class="nc" id="L290">            .toList();</span>
+        
+<span class="nc" id="L292">        ResponseAllUsersDto response = new ResponseAllUsersDto(&quot;success&quot;, decryptedUsers);</span>
+<span class="nc" id="L293">        response.setTotalPages(userPage.getTotalPages());</span>
+<span class="nc" id="L294">        response.setTotalElements(userPage.getTotalElements());</span>
+<span class="nc" id="L295">        response.setPageSize(userPage.getSize());</span>
+<span class="nc" id="L296">        response.setCurrentPage(userPage.getNumber());</span>
+<span class="nc" id="L297">        response.setFirst(userPage.isFirst());</span>
+<span class="nc" id="L298">        response.setLast(userPage.isLast());</span>
+        
+<span class="nc" id="L300">        return ResponseEntity.ok(response);</span>
+    }
+
+    @Operation(
+            summary = &quot;Get user by ID&quot;,
+            description = &quot;Returns user details for the specified ID&quot;,
+            tags = {&quot;User Management&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;User details retrieved successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;404&quot;,
+                    description = &quot;User not found&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;UserDTO&gt; getUserById(
+            @PathVariable @Min(value = 1, message = &quot;Invalid user ID&quot;) Long id) {
+<span class="nc" id="L332">        UserDTO user = userService.getUserById(id);</span>
+        
+        try {
+<span class="nc bnc" id="L335" title="All 2 branches missed.">            if (user.getFirstName() != null) {</span>
+<span class="nc" id="L336">                user.setFirstName(encryptionUtil.decrypt(user.getFirstName()));</span>
+            }
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if (user.getLastName() != null) {</span>
+<span class="nc" id="L339">                user.setLastName(encryptionUtil.decrypt(user.getLastName()));</span>
+            }
+<span class="nc bnc" id="L341" title="All 2 branches missed.">            if (user.getAddress() != null) {</span>
+<span class="nc" id="L342">                user.setAddress(encryptionUtil.decrypt(user.getAddress()));</span>
+            }
+
+<span class="nc" id="L345">        } catch (Exception e) {</span>
+<span class="nc" id="L346">            log.error(&quot;Error decrypting user data: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L347">        }</span>
+        
+<span class="nc" id="L349">        return ResponseEntity.ok(user);</span>
+    }
+
+    @Operation(
+            summary = &quot;Get user profile by ID&quot;,
+            description = &quot;Returns detailed user profile with role-specific data&quot;,
+            tags = {&quot;User Management&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;User profile retrieved successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;404&quot;,
+                    description = &quot;User not found&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping(&quot;/profile/{id}&quot;)
+    public ResponseEntity&lt;UserProfileDTO&gt; getUserProfile(
+            @PathVariable @Min(value = 1, message = &quot;Invalid user ID&quot;) Long id) {
+<span class="nc" id="L381">        UserProfileDTO profile = userService.getUserProfileById(id);</span>
+
+        try {
+<span class="nc" id="L384">            UserDTO user = profile.getUser();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">                if (user.getFirstName() != null) {</span>
+<span class="nc" id="L387">                    user.setFirstName(encryptionUtil.decrypt(user.getFirstName()));</span>
+                }
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                if (user.getLastName() != null) {</span>
+<span class="nc" id="L390">                    user.setLastName(encryptionUtil.decrypt(user.getLastName()));</span>
+                }
+<span class="nc bnc" id="L392" title="All 2 branches missed.">                if (user.getAddress() != null) {</span>
+<span class="nc" id="L393">                    user.setAddress(encryptionUtil.decrypt(user.getAddress()));</span>
+                }
+            }
+<span class="nc" id="L396">        } catch (Exception e) {</span>
+<span class="nc" id="L397">            log.error(&quot;Error decrypting user data: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L398">        }</span>
+        
+<span class="nc" id="L400">        return ResponseEntity.ok(profile);</span>
+    }
+    
+    @Operation(
+            summary = &quot;Get current user's profile&quot;,
+            description = &quot;Returns the profile of the currently authenticated user&quot;,
+            tags = {&quot;User Management&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;User profile retrieved successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping(&quot;/profile/me&quot;)
+    public ResponseEntity&lt;UserProfileDTO&gt; getCurrentUserProfile() {
+<span class="nc" id="L424">        UserProfileDTO profile = userService.getCurrentUserProfile();</span>
+        
+        try {
+<span class="nc" id="L427">            UserDTO user = profile.getUser();</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">                if (user.getFirstName() != null) {</span>
+<span class="nc" id="L430">                    user.setFirstName(encryptionUtil.decrypt(user.getFirstName()));</span>
+                }
+<span class="nc bnc" id="L432" title="All 2 branches missed.">                if (user.getLastName() != null) {</span>
+<span class="nc" id="L433">                    user.setLastName(encryptionUtil.decrypt(user.getLastName()));</span>
+                }
+<span class="nc bnc" id="L435" title="All 2 branches missed.">                if (user.getAddress() != null) {</span>
+<span class="nc" id="L436">                    user.setAddress(encryptionUtil.decrypt(user.getAddress()));</span>
+                }
+            }
+<span class="nc" id="L439">        } catch (Exception e) {</span>
+<span class="nc" id="L440">            log.error(&quot;Error decrypting user data: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L441">        }</span>
+        
+<span class="nc" id="L443">        return ResponseEntity.ok(profile);</span>
+    }
+
+    @Operation(
+            summary = &quot;Update user details&quot;,
+            description = &quot;Updates the details of an existing user&quot;,
+            tags = {&quot;User Management&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;User details updated successfully&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;400&quot;,
+                    description = &quot;Invalid input data&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;404&quot;,
+                    description = &quot;User not found&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @PatchMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;UserDTO&gt; updateUser(
+            @PathVariable @Min(value = 1, message = &quot;Invalid user ID&quot;) Long id,
+            @Valid @RequestBody UserUpdateRequest request) {
+<span class="nc" id="L483">        UserDTO updatedUser = userService.updateUser(id, request);</span>
+<span class="nc" id="L484">        return ResponseEntity.ok(updatedUser);</span>
+    }
+
+    @Operation(
+            summary = &quot;Check device fingerprint&quot;,
+            description = &quot;Compares the current device fingerprint with the stored one for security verification&quot;,
+            tags = {&quot;Security&quot;},
+            security = { @SecurityRequirement(name = &quot;bearer-jwt&quot;) }
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = &quot;200&quot;,
+                    description = &quot;Device fingerprint check completed&quot;
+            ),
+            @ApiResponse(
+                    responseCode = &quot;401&quot;,
+                    description = &quot;Unauthorized&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;404&quot;,
+                    description = &quot;User not found&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = &quot;500&quot;,
+                    description = &quot;Internal server error&quot;,
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    @GetMapping(&quot;/security/device-fingerprint&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; checkDeviceFingerprint(HttpServletRequest request) {
+        try {
+<span class="nc" id="L523">            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L524" title="All 6 branches missed.">            if (authentication == null || !authentication.isAuthenticated() || </span>
+                    authentication instanceof AnonymousAuthenticationToken) {
+<span class="nc" id="L526">                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="nc" id="L527">                        .body(Map.of(&quot;error&quot;, &quot;User not authenticated&quot;));</span>
+            }
+            
+<span class="nc" id="L530">            String username = authentication.getName();</span>
+<span class="nc" id="L531">            User user = userRepository.findByEmail(username);</span>
+            
+<span class="nc bnc" id="L533" title="All 2 branches missed.">            if (user == null) {</span>
+<span class="nc" id="L534">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L535">                        .body(Map.of(&quot;error&quot;, &quot;User not found&quot;));</span>
+            }
+
+<span class="nc" id="L538">            String storedFingerprint = user.getDeviceFingerprint();</span>
+<span class="nc" id="L539">            String currentFingerprint = jwtService.generateDeviceFingerprint(request);</span>
+            
+<span class="nc" id="L541">            Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L542">            result.put(&quot;email&quot;, user.getEmail());</span>
+<span class="nc" id="L543">            result.put(&quot;lastLogin&quot;, user.getLastLogin());</span>
+
+<span class="nc bnc" id="L545" title="All 2 branches missed.">            if (storedFingerprint != null) {</span>
+<span class="nc" id="L546">                result.put(&quot;storedFingerprint&quot;, storedFingerprint.substring(0, 8) + &quot;...&quot;);</span>
+            } else {
+<span class="nc" id="L548">                result.put(&quot;storedFingerprint&quot;, null);</span>
+            }
+            
+<span class="nc bnc" id="L551" title="All 2 branches missed.">            if (currentFingerprint != null) {</span>
+<span class="nc" id="L552">                result.put(&quot;currentFingerprint&quot;, currentFingerprint.substring(0, 8) + &quot;...&quot;);</span>
+            } else {
+<span class="nc" id="L554">                result.put(&quot;currentFingerprint&quot;, null);</span>
+            }
+            
+<span class="nc bnc" id="L557" title="All 4 branches missed.">            boolean fingerprintsMatch = storedFingerprint != null &amp;&amp; </span>
+                    currentFingerprint != null &amp;&amp; 
+<span class="nc bnc" id="L559" title="All 2 branches missed.">                    storedFingerprint.equals(currentFingerprint);</span>
+            
+<span class="nc" id="L561">            result.put(&quot;fingerprintsMatch&quot;, fingerprintsMatch);</span>
+            
+<span class="nc" id="L563">            return ResponseEntity.ok(result);</span>
+<span class="nc" id="L564">        } catch (Exception e) {</span>
+<span class="nc" id="L565">            log.error(&quot;Error checking device fingerprint: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L566">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L567">                    .body(Map.of(&quot;error&quot;, &quot;Error checking device fingerprint: &quot; + e.getMessage()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

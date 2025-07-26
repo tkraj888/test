@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XssFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.config.filter</a> &gt; <span class="el_source">XssFilter.java</span></div><h1>XssFilter.java</h1><pre class="source lang-java linenums">package com.spring.jwt.config.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+/**
+ * Filter to protect against XSS attacks by sanitizing request parameters and form data
+ */
+@Component
+<span class="nc" id="L23">public class XssFilter implements Filter, Ordered {</span>
+
+<span class="nc" id="L25">    private static final Set&lt;String&gt; EXCLUDED_HEADERS = new HashSet&lt;&gt;(Arrays.asList(</span>
+            &quot;accept&quot;, &quot;content-type&quot;, &quot;authorization&quot;, &quot;origin&quot;, &quot;referer&quot;, &quot;user-agent&quot;,
+            &quot;host&quot;, &quot;connection&quot;, &quot;content-length&quot;, &quot;cookie&quot;, &quot;accept-encoding&quot;, &quot;accept-language&quot;
+    ));
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+<span class="nc" id="L33">        HttpServletRequest httpRequest = (HttpServletRequest) request;</span>
+<span class="nc" id="L34">        String path = httpRequest.getRequestURI();</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (path.startsWith(&quot;/user/registerUser&quot;)) {</span>
+<span class="nc" id="L37">            chain.doFilter(request, response);</span>
+<span class="nc" id="L38">            return;</span>
+        }
+
+<span class="nc bnc" id="L41" title="All 4 branches missed.">        if (path.contains(&quot;swagger-ui&quot;) || path.contains(&quot;api-docs&quot;)) {</span>
+<span class="nc" id="L42">            chain.doFilter(request, response);</span>
+<span class="nc" id="L43">            return;</span>
+        }
+
+<span class="nc" id="L46">        XssRequestWrapper wrappedRequest = new XssRequestWrapper((HttpServletRequest) request);</span>
+<span class="nc" id="L47">        chain.doFilter(wrappedRequest, response);</span>
+<span class="nc" id="L48">    }</span>
+
+    @Override
+    public void init(FilterConfig filterConfig)
+    {
+
+<span class="nc" id="L54">    }</span>
+
+    @Override
+    public void destroy()
+    {
+<span class="nc" id="L59">    }</span>
+
+    @Override
+    public int getOrder()
+    {
+<span class="nc" id="L64">        return Ordered.HIGHEST_PRECEDENCE + 40;</span>
+    }
+
+    /**
+     * Request wrapper that sanitizes parameters to prevent XSS attacks
+     */
+    private static class XssRequestWrapper extends HttpServletRequestWrapper {
+
+<span class="nc" id="L72">        private static final Pattern[] XSS_PATTERNS = {</span>
+
+<span class="nc" id="L74">                Pattern.compile(&quot;&lt;script&gt;(.*?)&lt;/script&gt;&quot;, Pattern.CASE_INSENSITIVE),</span>
+<span class="nc" id="L75">                Pattern.compile(&quot;src[\r\n]*=[\r\n]*\\\'(.*?)\\\'&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L76">                Pattern.compile(&quot;src[\r\n]*=[\r\n]*\\\&quot;(.*?)\\\&quot;&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L77">                Pattern.compile(&quot;on\\w+\\s*=\\s*\&quot;.*?\&quot;&quot;, Pattern.CASE_INSENSITIVE),</span>
+<span class="nc" id="L78">                Pattern.compile(&quot;on\\w+\\s*=\\s*'.*?'&quot;, Pattern.CASE_INSENSITIVE),</span>
+<span class="nc" id="L79">                Pattern.compile(&quot;javascript:&quot;, Pattern.CASE_INSENSITIVE),</span>
+<span class="nc" id="L80">                Pattern.compile(&quot;expression\\(.*?\\)&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L81">                Pattern.compile(&quot;behavior\\s*:\\s*url\\(.*?\\)&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L82">                Pattern.compile(&quot;&lt;.*?\\s+.*?\\s*=.*?&gt;&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L83">                Pattern.compile(&quot;eval\\((.*?)\\)&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L84">                Pattern.compile(&quot;alert\\((.*?)\\)&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L85">                Pattern.compile(&quot;document\\.write\\((.*?)\\)&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L86">                Pattern.compile(&quot;document\\.cookie&quot;, Pattern.CASE_INSENSITIVE),</span>
+<span class="nc" id="L87">                Pattern.compile(&quot;&lt;iframe(.*?)&gt;(.*?)&lt;/iframe&gt;&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),</span>
+<span class="nc" id="L88">                Pattern.compile(&quot;&lt;form(.*?)&gt;(.*?)&lt;/form&gt;&quot;, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL)</span>
+        };
+
+        private Map&lt;String, String[]&gt; sanitizedParameterMap;
+
+        public XssRequestWrapper(HttpServletRequest request) {
+<span class="nc" id="L94">            super(request);</span>
+<span class="nc" id="L95">        }</span>
+
+        @Override
+        public String getParameter(String name) {
+<span class="nc" id="L99">            String parameter = super.getParameter(name);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            return parameter != null ? sanitize(parameter) : null;</span>
+        }
+
+        @Override
+        public String[] getParameterValues(String name) {
+<span class="nc" id="L105">            String[] values = super.getParameterValues(name);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (values == null) {</span>
+<span class="nc" id="L107">                return null;</span>
+            }
+
+<span class="nc" id="L110">            String[] sanitizedValues = new String[values.length];</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc" id="L112">                sanitizedValues[i] = sanitize(values[i]);</span>
+            }
+
+<span class="nc" id="L115">            return sanitizedValues;</span>
+        }
+
+        @Override
+        public Map&lt;String, String[]&gt; getParameterMap() {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (sanitizedParameterMap == null) {</span>
+<span class="nc" id="L121">                Map&lt;String, String[]&gt; rawParameterMap = super.getParameterMap();</span>
+<span class="nc" id="L122">                sanitizedParameterMap = new HashMap&lt;&gt;(rawParameterMap.size());</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                for (Map.Entry&lt;String, String[]&gt; entry : rawParameterMap.entrySet()) {</span>
+<span class="nc" id="L125">                    String[] rawValues = entry.getValue();</span>
+<span class="nc" id="L126">                    String[] sanitizedValues = new String[rawValues.length];</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                    for (int i = 0; i &lt; rawValues.length; i++) {</span>
+<span class="nc" id="L129">                        sanitizedValues[i] = sanitize(rawValues[i]);</span>
+                    }
+
+<span class="nc" id="L132">                    sanitizedParameterMap.put(entry.getKey(), sanitizedValues);</span>
+<span class="nc" id="L133">                }</span>
+            }
+
+<span class="nc" id="L136">            return Collections.unmodifiableMap(sanitizedParameterMap);</span>
+        }
+
+        @Override
+        public String getHeader(String name) {
+<span class="nc" id="L141">            String header = super.getHeader(name);</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">            if (header != null &amp;&amp; EXCLUDED_HEADERS.contains(name.toLowerCase())) {</span>
+<span class="nc" id="L143">                return header;</span>
+            }
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            return header != null ? sanitize(header) : null;</span>
+        }
+
+        @Override
+        public Enumeration&lt;String&gt; getHeaders(String name) {
+<span class="nc" id="L150">            Enumeration&lt;String&gt; headers = super.getHeaders(name);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (headers == null) {</span>
+<span class="nc" id="L152">                return null;</span>
+            }
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (EXCLUDED_HEADERS.contains(name.toLowerCase())) {</span>
+<span class="nc" id="L156">                return headers;</span>
+            }
+<span class="nc" id="L158">            return new Enumeration&lt;String&gt;() {</span>
+                @Override
+                public boolean hasMoreElements() {
+<span class="nc" id="L161">                    return headers.hasMoreElements();</span>
+                }
+
+                @Override
+                public String nextElement() {
+<span class="nc" id="L166">                    return sanitize(headers.nextElement());</span>
+                }
+            };
+        }
+        /**
+         * Sanitizes the given value to prevent XSS attacks
+         */
+        private String sanitize(String value) {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (value == null) {</span>
+<span class="nc" id="L175">                return null;</span>
+            }
+
+<span class="nc" id="L178">            String sanitizedValue = value;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for (Pattern pattern : XSS_PATTERNS) {</span>
+<span class="nc" id="L180">                sanitizedValue = pattern.matcher(sanitizedValue).replaceAll(&quot;&quot;);</span>
+            }
+<span class="nc" id="L182">            sanitizedValue = sanitizedValue</span>
+<span class="nc" id="L183">                    .replaceAll(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="nc" id="L184">                    .replaceAll(&quot;&gt;&quot;, &quot;&amp;gt;&quot;)</span>
+<span class="nc" id="L185">                    .replaceAll(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)</span>
+<span class="nc" id="L186">                    .replaceAll(&quot;'&quot;, &quot;&amp;#x27;&quot;)</span>
+<span class="nc" id="L187">                    .replaceAll(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</span>
+<span class="nc" id="L188">                    .replaceAll(&quot;/&quot;, &quot;&amp;#x2F;&quot;);</span>
+
+<span class="nc" id="L190">            return sanitizedValue;</span>
+        }
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

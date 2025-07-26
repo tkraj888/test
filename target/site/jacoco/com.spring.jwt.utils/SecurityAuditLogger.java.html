@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityAuditLogger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.utils</a> &gt; <span class="el_source">SecurityAuditLogger.java</span></div><h1>SecurityAuditLogger.java</h1><pre class="source lang-java linenums">package com.spring.jwt.utils;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
+/**
+ * Security audit logging service to record security-related events
+ * in a standardized format for compliance and monitoring
+ */
+@Component
+<span class="nc" id="L19">public class SecurityAuditLogger {</span>
+<span class="nc" id="L20">    private static final Logger log = LoggerFactory.getLogger(&quot;SECURITY_AUDIT&quot;);</span>
+<span class="nc" id="L21">    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;</span>
+    
+    /**
+     * Log authentication success event
+     */
+    public void logAuthenticationSuccess(String username, String source) {
+<span class="nc" id="L27">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc" id="L28">        String clientIp = getClientIp(request);</span>
+<span class="nc" id="L29">        String userAgent = getUserAgent(request);</span>
+        
+<span class="nc" id="L31">        log.info(&quot;[AUTH_SUCCESS] user={}, source={}, ip={}, userAgent={}, timestamp={}&quot;,</span>
+<span class="nc" id="L32">                 username, source, clientIp, userAgent, getCurrentTimestamp());</span>
+<span class="nc" id="L33">    }</span>
+    
+    /**
+     * Log authentication failure event
+     */
+    public void logAuthenticationFailure(String username, String reason, String source) {
+<span class="nc" id="L39">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc" id="L40">        String clientIp = getClientIp(request);</span>
+<span class="nc" id="L41">        String userAgent = getUserAgent(request);</span>
+        
+<span class="nc" id="L43">        log.warn(&quot;[AUTH_FAILURE] user={}, reason={}, source={}, ip={}, userAgent={}, timestamp={}&quot;,</span>
+<span class="nc" id="L44">                 username, reason, source, clientIp, userAgent, getCurrentTimestamp());</span>
+<span class="nc" id="L45">    }</span>
+    
+    /**
+     * Log access denied event
+     */
+    public void logAccessDenied(String username, String resource, String requiredAuthority) {
+<span class="nc" id="L51">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc" id="L52">        String clientIp = getClientIp(request);</span>
+<span class="nc" id="L53">        String userAgent = getUserAgent(request);</span>
+        
+<span class="nc" id="L55">        log.warn(&quot;[ACCESS_DENIED] user={}, resource={}, requiredAuthority={}, ip={}, userAgent={}, timestamp={}&quot;,</span>
+<span class="nc" id="L56">                 username, resource, requiredAuthority, clientIp, userAgent, getCurrentTimestamp());</span>
+<span class="nc" id="L57">    }</span>
+    
+    /**
+     * Log token validity event
+     */
+    public void logTokenEvent(String type, String username, String tokenId, boolean isValid) {
+<span class="nc" id="L63">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        String clientIp = request != null ? getClientIp(request) : &quot;unknown&quot;;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        String userAgent = request != null ? getUserAgent(request) : &quot;unknown&quot;;</span>
+        
+<span class="nc" id="L67">        log.info(&quot;[TOKEN_{}] user={}, tokenId={}, valid={}, ip={}, userAgent={}, timestamp={}&quot;,</span>
+<span class="nc" id="L68">                 type, username, tokenId, isValid, clientIp, userAgent, getCurrentTimestamp());</span>
+<span class="nc" id="L69">    }</span>
+    
+    /**
+     * Log permission changes
+     */
+    public void logPermissionChange(String adminUser, String targetUser, String action, String permission) {
+<span class="nc" id="L75">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc" id="L76">        String clientIp = getClientIp(request);</span>
+        
+<span class="nc" id="L78">        log.info(&quot;[PERMISSION_CHANGE] admin={}, target={}, action={}, permission={}, ip={}, timestamp={}&quot;,</span>
+<span class="nc" id="L79">                 adminUser, targetUser, action, permission, clientIp, getCurrentTimestamp());</span>
+<span class="nc" id="L80">    }</span>
+    
+    /**
+     * Log security configuration changes
+     */
+    public void logSecurityConfigChange(String adminUser, String configItem, String oldValue, String newValue) {
+<span class="nc" id="L86">        HttpServletRequest request = getCurrentRequest();</span>
+<span class="nc" id="L87">        String clientIp = getClientIp(request);</span>
+        
+<span class="nc" id="L89">        log.info(&quot;[CONFIG_CHANGE] admin={}, item={}, oldValue={}, newValue={}, ip={}, timestamp={}&quot;,</span>
+<span class="nc" id="L90">                 adminUser, configItem, oldValue, newValue, clientIp, getCurrentTimestamp());</span>
+<span class="nc" id="L91">    }</span>
+    
+    /**
+     * Get the current HTTP request if available
+     */
+    private HttpServletRequest getCurrentRequest() {
+<span class="nc" id="L97">        return Optional.ofNullable(RequestContextHolder.getRequestAttributes())</span>
+<span class="nc" id="L98">                .filter(attrs -&gt; attrs instanceof ServletRequestAttributes)</span>
+<span class="nc" id="L99">                .map(attrs -&gt; ((ServletRequestAttributes) attrs).getRequest())</span>
+<span class="nc" id="L100">                .orElse(null);</span>
+    }
+    
+    /**
+     * Extract the client IP address from the request
+     */
+    private String getClientIp(HttpServletRequest request) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (request == null) {</span>
+<span class="nc" id="L108">            return &quot;unknown&quot;;</span>
+        }
+        
+<span class="nc" id="L111">        String xff = request.getHeader(&quot;X-Forwarded-For&quot;);</span>
+<span class="nc bnc" id="L112" title="All 6 branches missed.">        if (xff != null &amp;&amp; !xff.isEmpty() &amp;&amp; !xff.equalsIgnoreCase(&quot;unknown&quot;)) {</span>
+            // Get the first IP if multiple are present (client, proxy1, proxy2)
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            return xff.contains(&quot;,&quot;) ? xff.split(&quot;,&quot;)[0].trim() : xff;</span>
+        }
+        
+<span class="nc" id="L117">        String realIp = request.getHeader(&quot;X-Real-IP&quot;);</span>
+<span class="nc bnc" id="L118" title="All 6 branches missed.">        if (realIp != null &amp;&amp; !realIp.isEmpty() &amp;&amp; !realIp.equalsIgnoreCase(&quot;unknown&quot;)) {</span>
+<span class="nc" id="L119">            return realIp;</span>
+        }
+        
+<span class="nc" id="L122">        return request.getRemoteAddr();</span>
+    }
+    
+    /**
+     * Extract the user agent from the request
+     */
+    private String getUserAgent(HttpServletRequest request) {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (request == null) {</span>
+<span class="nc" id="L130">            return &quot;unknown&quot;;</span>
+        }
+        
+<span class="nc" id="L133">        String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        return userAgent != null ? userAgent : &quot;unknown&quot;;</span>
+    }
+    
+    /**
+     * Get current timestamp formatted for logs
+     */
+    private String getCurrentTimestamp() {
+<span class="nc" id="L141">        return LocalDateTime.now().format(formatter);</span>
+    }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

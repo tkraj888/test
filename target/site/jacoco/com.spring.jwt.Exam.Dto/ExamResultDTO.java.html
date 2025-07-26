@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamResultDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.Dto</a> &gt; <span class="el_source">ExamResultDTO.java</span></div><h1>ExamResultDTO.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.Dto;
+
+import com.spring.jwt.Exam.entity.ExamResult;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+<span class="nc bnc" id="L10" title="All 150 branches missed.">@Data</span>
+<span class="nc" id="L11">@NoArgsConstructor</span>
+<span class="nc" id="L12">@AllArgsConstructor</span>
+public class ExamResultDTO {
+<span class="nc" id="L14">    private Integer resultId;</span>
+<span class="nc" id="L15">    private Integer userId;</span>
+<span class="nc" id="L16">    private Integer paperId;</span>
+<span class="nc" id="L17">    private String paperTitle;</span>
+<span class="nc" id="L18">    private String studentClass;</span>
+<span class="nc" id="L19">    private LocalDateTime examStartTime;</span>
+<span class="nc" id="L20">    private LocalDateTime examEndTime;</span>
+<span class="nc" id="L21">    private LocalDateTime resultProcessedTime;</span>
+<span class="nc" id="L22">    private Double score;</span>
+<span class="nc" id="L23">    private Double negativeCount;</span>
+<span class="nc" id="L24">    private Double negativeScore;</span>
+<span class="nc" id="L25">    private Integer totalQuestions;</span>
+<span class="nc" id="L26">    private Integer correctAnswers;</span>
+<span class="nc" id="L27">    private Integer incorrectAnswers;</span>
+<span class="nc" id="L28">    private Integer unansweredQuestions;</span>
+<span class="nc" id="L29">    private Integer originalSessionId;</span>
+    
+    // Fields for backward compatibility
+<span class="nc" id="L32">    private Integer sessionId;</span>
+<span class="nc" id="L33">    private String status;</span>
+    
+    /**
+     * Convert ExamResult entity to DTO
+     * @param result The exam result entity
+     * @return ExamResultDTO
+     */
+    public static ExamResultDTO fromEntity(ExamResult result) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (result == null) {</span>
+<span class="nc" id="L42">            return null;</span>
+        }
+        
+<span class="nc" id="L45">        ExamResultDTO dto = new ExamResultDTO();</span>
+<span class="nc" id="L46">        dto.setResultId(result.getResultId());</span>
+<span class="nc" id="L47">        dto.setUserId(result.getUser().getId().intValue());</span>
+<span class="nc" id="L48">        dto.setPaperId(result.getPaper().getPaperId());</span>
+<span class="nc" id="L49">        dto.setPaperTitle(result.getPaper().getTitle());</span>
+<span class="nc" id="L50">        dto.setStudentClass(result.getStudentClass());</span>
+<span class="nc" id="L51">        dto.setExamStartTime(result.getExamStartTime());</span>
+<span class="nc" id="L52">        dto.setExamEndTime(result.getExamEndTime());</span>
+<span class="nc" id="L53">        dto.setResultProcessedTime(result.getResultProcessedTime());</span>
+<span class="nc" id="L54">        dto.setScore(result.getScore());</span>
+<span class="nc" id="L55">        dto.setNegativeCount(result.getNegativeCount());</span>
+<span class="nc" id="L56">        dto.setNegativeScore(result.getNegativeScore());</span>
+<span class="nc" id="L57">        dto.setTotalQuestions(result.getTotalQuestions());</span>
+<span class="nc" id="L58">        dto.setCorrectAnswers(result.getCorrectAnswers());</span>
+<span class="nc" id="L59">        dto.setIncorrectAnswers(result.getIncorrectAnswers());</span>
+<span class="nc" id="L60">        dto.setUnansweredQuestions(result.getUnansweredQuestions());</span>
+<span class="nc" id="L61">        dto.setOriginalSessionId(result.getOriginalSessionId());</span>
+        
+        // Set backward compatibility fields
+<span class="nc" id="L64">        dto.setSessionId(result.getResultId());</span>
+<span class="nc" id="L65">        dto.setStatus(&quot;Completed&quot;);</span>
+        
+<span class="nc" id="L67">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.controller</a> &gt; <span class="el_source">PaperController.java</span></div><h1>PaperController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.controller;
+
+import com.spring.jwt.Exam.Dto.PaperDTO;
+import com.spring.jwt.Exam.Dto.PaperDTO1;
+import com.spring.jwt.Exam.Dto.PaperWithQuestionsDTO;
+import com.spring.jwt.Exam.service.PaperService;
+import com.spring.jwt.dto.PageResponseDto;
+import com.spring.jwt.dto.ResponseDto;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import com.spring.jwt.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.spring.jwt.Exam.Dto.PaperWithQuestionsAndAnswersDTO;
+
+import java.util.List;
+
+@Tag(name = &quot;Paper Management&quot;, description = &quot;APIs for managing exam papers&quot;)
+@RestController
+@RequestMapping(&quot;/api/v1/papers&quot;)
+<span class="nc" id="L25">public class PaperController {</span>
+
+    @Autowired
+    private PaperService paperService;
+
+
+
+    @Operation(
+            summary = &quot;Create a new paper&quot;,
+            description = &quot;Creates a new paper with the given details&quot;
+    )
+    @PostMapping(&quot;/add&quot;)
+    public ResponseEntity&lt;ResponseDto&lt;PaperDTO&gt;&gt; createPaper(@RequestBody PaperDTO paperDTO) {
+        try {
+<span class="nc" id="L39">            PaperDTO paper = paperService.createPaper(paperDTO);</span>
+<span class="nc" id="L40">            return ResponseEntity.ok(</span>
+<span class="nc" id="L41">                    ResponseDto.success(&quot;Paper created successfully&quot;, paper)</span>
+            );
+<span class="nc" id="L43">        } catch (Exception e) {</span>
+<span class="nc" id="L44">            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(</span>
+<span class="nc" id="L45">                    ResponseDto.error(&quot;Failed to create paper&quot;, e.getMessage())</span>
+            );
+        }
+    }
+
+
+    @Operation(
+            summary = &quot;Get Paper by ID&quot;,
+            description = &quot;Retrieves a paper by its unique identifier&quot;
+    )
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;?&gt; getPaper(
+            @Parameter(description = &quot;Paper ID&quot;, required = true, example = &quot;1&quot;)
+            @PathVariable Integer id
+    ) {
+        try {
+<span class="nc" id="L61">            PaperDTO1 paper = paperService.getPaper(id);</span>
+<span class="nc" id="L62">            return ResponseEntity.ok(paper);</span>
+<span class="nc" id="L63">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L64">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L65">                    .body(&quot;Paper not found with id: &quot; + id);</span>
+<span class="nc" id="L66">        } catch (Exception e) {</span>
+<span class="nc" id="L67">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L68">                    .body(&quot;Failed to get paper. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Update Paper&quot;,
+            description = &quot;Updates an existing paper by its unique identifier&quot;
+    )
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;?&gt; updatePaper(
+            @Parameter(description = &quot;Paper ID&quot;, required = true, example = &quot;1&quot;)
+            @PathVariable Integer id,
+            @RequestBody PaperDTO paperDTO
+    ) {
+        try {
+<span class="nc" id="L83">            PaperDTO updated = paperService.updatePaper(id, paperDTO);</span>
+<span class="nc" id="L84">            return ResponseEntity.ok(updated);</span>
+<span class="nc" id="L85">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L86">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L87">                    .body(&quot;Paper not found with id: &quot; + id);</span>
+<span class="nc" id="L88">        } catch (Exception e) {</span>
+<span class="nc" id="L89">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L90">                    .body(&quot;Failed to update paper. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Delete Paper&quot;,
+            description = &quot;Deletes a paper by its unique identifier&quot;
+    )
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;?&gt; deletePaper(
+            @Parameter(description = &quot;Paper ID&quot;, required = true, example = &quot;1&quot;)
+            @PathVariable Integer id
+    ) {
+        try {
+<span class="nc" id="L104">            paperService.deletePaper(id);</span>
+<span class="nc" id="L105">            return ResponseEntity.ok(&quot;Paper deleted successfully.&quot;);</span>
+<span class="nc" id="L106">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L107">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L108">                    .body(&quot;Paper not found with id: &quot; + id);</span>
+<span class="nc" id="L109">        } catch (Exception e) {</span>
+<span class="nc" id="L110">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L111">                    .body(&quot;Failed to delete paper. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Get Paper with Questions (No Answers)&quot;,
+            description = &quot;Retrieves a paper and its questions by paper ID, excluding answers&quot;
+    )
+    @GetMapping(&quot;/noanswer/{id}&quot;)
+    public ResponseEntity&lt;?&gt; getPaperWithQuestions(
+            @Parameter(description = &quot;Paper ID&quot;, required = true, example = &quot;1&quot;)
+            @PathVariable Integer id
+    ) {
+        try {
+<span class="nc" id="L125">            PaperWithQuestionsDTO dto = paperService.getPaperWithQuestions(id);</span>
+<span class="nc" id="L126">            return ResponseEntity.ok(dto);</span>
+<span class="nc" id="L127">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L128">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L129">                    .body(&quot;Paper not found with id: &quot; + id);</span>
+<span class="nc" id="L130">        } catch (Exception e) {</span>
+<span class="nc" id="L131">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L132">                    .body(&quot;Failed to get paper with questions. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Get All Papers (Paged)&quot;,
+            description = &quot;Returns a paginated list of all papers&quot;
+    )
+    @GetMapping(&quot;/papers&quot;)
+    public ResponseEntity&lt;?&gt; getAllPapers(
+            @Parameter(description = &quot;Page number&quot;, example = &quot;0&quot;)
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @Parameter(description = &quot;Page size&quot;, example = &quot;10&quot;)
+            @RequestParam(defaultValue = &quot;10&quot;) int size
+    ) {
+        try {
+<span class="nc" id="L148">            PageResponseDto&lt;PaperDTO&gt; result = paperService.getAllPapers(page, size);</span>
+<span class="nc" id="L149">            return ResponseEntity.ok(result);</span>
+<span class="nc" id="L150">        } catch (Exception e) {</span>
+<span class="nc" id="L151">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L152">                    .body(&quot;Failed to fetch all papers. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Get Live Papers for a Student Class&quot;,
+            description = &quot;Returns live papers for the specified student class&quot;
+    )
+    @GetMapping(&quot;/papers/live&quot;)
+    public ResponseEntity&lt;?&gt; getLivePapers(
+            @Parameter(description = &quot;Student Class&quot;, required = true, example = &quot;10th&quot;)
+            @RequestParam String studentClass
+    ) {
+        try {
+<span class="nc" id="L166">            List&lt;PaperDTO&gt; papers = paperService.getLivePapers(studentClass);</span>
+<span class="nc" id="L167">            return ResponseEntity.ok(papers);</span>
+<span class="nc" id="L168">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L169">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="nc" id="L170">                    .body(&quot;No live papers found for studentClass: &quot; + studentClass);</span>
+<span class="nc" id="L171">        } catch (Exception e) {</span>
+<span class="nc" id="L172">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L173">                    .body(&quot;Failed to fetch live papers. &quot; + e.getMessage());</span>
+        }
+    }
+
+    @GetMapping(&quot;/solutions&quot;)
+    @Operation(
+            summary = &quot;Get paper with all questions, answers, and hints&quot;,
+            description = &quot;Retrieves a paper by ID including all its questions along with their correct answers and hints/solutions.&quot;
+    )
+    public ResponseEntity&lt;ApiResponse&lt;PaperWithQuestionsAndAnswersDTO&gt;&gt; getPaperWithSolutions(
+            @Parameter(description = &quot;ID of the paper to retrieve&quot;, required = true)
+            @RequestParam Integer paperId
+    ) {
+        try {
+<span class="nc" id="L187">            PaperWithQuestionsAndAnswersDTO response = paperService.getPaperWithSolutions(paperId);</span>
+<span class="nc" id="L188">            return ResponseEntity.ok(ApiResponse.success(&quot;Paper fetched successfully&quot;, response));</span>
+<span class="nc" id="L189">        } catch (Exception e) {</span>
+<span class="nc" id="L190">            return ResponseEntity</span>
+<span class="nc" id="L191">                    .badRequest()</span>
+<span class="nc" id="L192">                    .body(ApiResponse.error(HttpStatus.BAD_REQUEST, &quot;Failed to fetch paper&quot;, e.getMessage()));</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

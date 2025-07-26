@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamResult.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.entity</a> &gt; <span class="el_source">ExamResult.java</span></div><h1>ExamResult.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.entity;
+
+import com.spring.jwt.entity.User;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * Entity to store finalized exam results after the result date has passed
+ */
+@Entity
+<span class="nc bnc" id="L15" title="All 126 branches missed.">@Data</span>
+<span class="nc" id="L16">@NoArgsConstructor</span>
+<span class="nc" id="L17">@AllArgsConstructor</span>
+@Table(name = &quot;exam_results&quot;)
+public class ExamResult {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+<span class="nc" id="L22">    private Integer resultId;</span>
+
+    @ManyToOne
+    @JoinColumn(name = &quot;user_id&quot;)
+<span class="nc" id="L26">    private User user;</span>
+
+    @ManyToOne
+    @JoinColumn(name = &quot;paper_id&quot;)
+<span class="nc" id="L30">    private Paper paper;</span>
+    
+<span class="nc" id="L32">    private String studentClass;</span>
+<span class="nc" id="L33">    private LocalDateTime examStartTime;</span>
+<span class="nc" id="L34">    private LocalDateTime examEndTime;</span>
+<span class="nc" id="L35">    private LocalDateTime resultProcessedTime;</span>
+<span class="nc" id="L36">    private Double score;</span>
+<span class="nc" id="L37">    private Double negativeCount;</span>
+<span class="nc" id="L38">    private Double negativeScore;</span>
+
+<span class="nc" id="L40">    private Integer totalQuestions;</span>
+<span class="nc" id="L41">    private Integer correctAnswers;</span>
+<span class="nc" id="L42">    private Integer incorrectAnswers;</span>
+<span class="nc" id="L43">    private Integer unansweredQuestions;</span>
+
+<span class="nc" id="L45">    private Integer originalSessionId;</span>
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

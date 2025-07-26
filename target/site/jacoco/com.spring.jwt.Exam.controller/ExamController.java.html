@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExamController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Exam.controller</a> &gt; <span class="el_source">ExamController.java</span></div><h1>ExamController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Exam.controller;
+
+import com.spring.jwt.Exam.Dto.*;
+import com.spring.jwt.Exam.entity.ExamSession;
+import com.spring.jwt.Exam.service.ExamService;
+import com.spring.jwt.Exam.serviceImpl.ExcelExportUtil;
+import com.spring.jwt.dto.ResponseDto;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import com.spring.jwt.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.InputStream;
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/v1/exam&quot;)
+<span class="nc" id="L22">public class ExamController {</span>
+
+    @Autowired
+    private ExamService examService;
+
+    @PostMapping(&quot;/start&quot;)
+    public PaperWithQuestionsDTOn startExam(
+            @RequestParam Integer userId,
+            @RequestParam Integer paperId,
+            @RequestParam String studentClass) {
+<span class="nc" id="L32">        return examService.startExam(userId, paperId, studentClass);</span>
+    }
+
+    // Submit answers for session
+    @PostMapping(&quot;/{sessionId}/submit&quot;)
+    public ResponseDto&lt;ResponseDto1&lt;Double&gt;&gt; submitExam(
+            @PathVariable Integer sessionId,
+            @RequestParam Long userId,
+            @RequestBody List&lt;UserAnswerDTO&gt; answers) {
+        try {
+<span class="nc" id="L42">            ResponseDto1&lt;Double&gt; dto = examService.submitExamAnswers(sessionId, userId, answers);</span>
+<span class="nc" id="L43">            return ResponseDto.success(&quot;Exam submitted successfully&quot;, dto);</span>
+<span class="nc" id="L44">        } catch (ResourceNotFoundException ex) {</span>
+<span class="nc" id="L45">            return ResponseDto.error(&quot;Exam submission failed: Resource not found&quot;, ex.getMessage());</span>
+<span class="nc" id="L46">        } catch (Exception ex) {</span>
+<span class="nc" id="L47">            return ResponseDto.error(&quot;An unexpected error occurred during exam submission&quot;, ex.getMessage());</span>
+        }
+    }
+
+    @GetMapping(&quot;/results/{userId}&quot;)
+    public List&lt;ExamResultDTO&gt; getExamResultsByUser(@PathVariable Long userId) {
+<span class="nc" id="L53">        return examService.getResultsByUserId(userId);</span>
+    }
+
+    @GetMapping(&quot;/session/{sessionId}/qa&quot;)
+    public List&lt;SessionQuestionAnswerDTO&gt; getSessionQuestionsAndAnswers(@PathVariable Integer sessionId) {
+<span class="nc" id="L58">        return examService.getQuestionsAndAnswersBySessionId(sessionId);</span>
+    }
+
+    @GetMapping(&quot;/studentClasses&quot;)
+    public List&lt;StudentClassResultDTO&gt; getAllStudentClassResults() {
+<span class="nc" id="L63">        return examService.getResultsGroupedByStudentClass();</span>
+    }
+
+    @GetMapping(&quot;/sessions&quot;)
+    public ResponseEntity&lt;List&lt;ExamSessionDTO&gt;&gt; getAllExamSessions() {
+<span class="nc" id="L68">        List&lt;ExamSessionDTO&gt; sessions = examService.getAllExamSessions();</span>
+<span class="nc" id="L69">        return ResponseEntity.ok(sessions);</span>
+    }
+
+    @GetMapping(&quot;/session/last/{userId}&quot;)
+    public ResponseEntity&lt;ExamSessionDTO&gt; getLastSessionByUserId(@PathVariable Long userId) {
+<span class="nc" id="L74">        ExamSessionDTO session = examService.getLastExamSessionByUserId(userId);</span>
+<span class="nc" id="L75">        return ResponseEntity.ok(session);</span>
+    }
+
+
+    @GetMapping(&quot;/unique-papers&quot;)
+    public ResponseEntity&lt;ResponseDto&lt;List&lt;ExamPaperSummaryDto&gt;&gt;&gt; getAllUniqueExamPapers() {
+        try {
+<span class="nc" id="L82">            List&lt;ExamPaperSummaryDto&gt; papers = examService.getUniquePaperSummaries();</span>
+<span class="nc" id="L83">            return ResponseEntity.ok(new ResponseDto&lt;&gt;(&quot;Unique exam papers fetched successfully&quot;, papers, null));</span>
+<span class="nc" id="L84">        } catch (Exception e) {</span>
+<span class="nc" id="L85">            return ResponseEntity.internalServerError().body(</span>
+<span class="nc" id="L86">                    new ResponseDto&lt;&gt;(&quot;Failed to fetch unique exam papers&quot;, null, e.getMessage())</span>
+            );
+        }
+    }
+
+    @GetMapping(&quot;/exam-sessions/by-paper/{paperId}&quot;)
+    public ResponseDto&lt;List&lt;ExamSessionShowResultDto&gt;&gt; getSessionsByPaperId(@PathVariable Integer paperId) {
+        try {
+<span class="nc" id="L94">            List&lt;ExamSessionShowResultDto&gt; dtos = examService.getSessionsByPaperId(paperId);</span>
+<span class="nc" id="L95">            return ResponseDto.success(&quot;Sessions fetched successfully&quot;, dtos);</span>
+<span class="nc" id="L96">        } catch (ResourceNotFoundException ex) {</span>
+<span class="nc" id="L97">            return ResponseDto.error(&quot;Not found&quot;, ex.getMessage());</span>
+<span class="nc" id="L98">        } catch (Exception ex) {</span>
+<span class="nc" id="L99">            return ResponseDto.error(&quot;Unexpected error&quot;, ex.getMessage());</span>
+        }
+    }
+    @GetMapping(&quot;/export/excel/{paperId}&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportExamSessionResultToExcel(@PathVariable Integer paperId) {
+        try {
+<span class="nc" id="L105">            List&lt;ExamSessionShowResultDto&gt; sessions = examService.getSessionsByPaperId(paperId);</span>
+<span class="nc" id="L106">            InputStream excelStream = ExcelExportUtil.exportExamSessionsToExcel(sessions);</span>
+
+<span class="nc" id="L108">            byte[] bytes = excelStream.readAllBytes();</span>
+<span class="nc" id="L109">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L110">            headers.add(&quot;Content-Disposition&quot;, &quot;attachment; filename=exam_sessions_&quot; + paperId + &quot;.xlsx&quot;);</span>
+
+<span class="nc" id="L112">            return ResponseEntity.ok()</span>
+<span class="nc" id="L113">                    .headers(headers)</span>
+<span class="nc" id="L114">                    .contentType(MediaType.APPLICATION_OCTET_STREAM)</span>
+<span class="nc" id="L115">                    .body(bytes);</span>
+<span class="nc" id="L116">        } catch (Exception e) {</span>
+<span class="nc" id="L117">            return ResponseEntity.internalServerError()</span>
+<span class="nc" id="L118">                    .body((&quot;Failed to export Excel: &quot; + e.getMessage()).getBytes());</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

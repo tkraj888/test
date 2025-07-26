@@ -1,0 +1,5 @@
+# Created at 2025-07-26T16:07:07.167
+Boot Manifest-JAR contains absolute paths in classpath 'D:\GT\KArtolAppTest\KArtolApp-master\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
