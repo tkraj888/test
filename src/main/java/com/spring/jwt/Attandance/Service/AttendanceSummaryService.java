@@ -6,31 +6,31 @@ import java.util.List;
 
 public interface AttendanceSummaryService {
     /**
- * Saves a new attendance summary based on the provided data transfer object.
+ * Persists a new attendance summary using the provided data.
  *
- * @param dto the attendance summary data to be saved
- * @return the saved attendance summary
+ * @param dto the attendance summary details to save
+ * @return the persisted attendance summary
  */
 AttendanceSummaryDto saveSummary(AttendanceSummaryDto dto);
     /**
- * Retrieves the attendance summary corresponding to the specified ID.
+ * Returns the attendance summary associated with the specified unique identifier.
  *
- * @param id the unique identifier of the attendance summary
- * @return the attendance summary data transfer object for the given ID
+ * @param id the unique identifier of the attendance summary to retrieve
+ * @return the corresponding AttendanceSummaryDto, or null if not found
  */
 AttendanceSummaryDto getSummaryById(Long id);
     /**
- * Retrieves a list of all attendance summaries.
+ * Returns a list of all attendance summaries.
  *
- * @return a list of AttendanceSummaryDto objects representing all attendance summaries
+ * @return a list of AttendanceSummaryDto objects for all recorded attendance summaries
  */
 List<AttendanceSummaryDto> getAllSummaries();
     /**
- * Updates an existing attendance summary identified by the given ID with the provided data.
+ * Updates the attendance summary with the specified ID using the provided data.
  *
- * @param id  the unique identifier of the attendance summary to update
- * @param dto the data transfer object containing updated attendance summary information
- * @return the updated attendance summary as a data transfer object
+ * @param id the unique identifier of the attendance summary to update
+ * @param dto the updated attendance summary data
+ * @return the updated attendance summary
  */
 AttendanceSummaryDto updateSummary(Long id, AttendanceSummaryDto dto);
 
