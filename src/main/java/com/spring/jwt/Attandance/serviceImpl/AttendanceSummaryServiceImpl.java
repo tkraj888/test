@@ -19,12 +19,12 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
     private final AttendanceSummaryRepository repo;
 
     /**
-     * Saves a new attendance summary and returns the updated data transfer object.
+     * Creates and persists a new attendance summary, returning the DTO updated with persisted values.
      *
-     * Copies properties from the provided DTO to a new entity, persists it, and updates the DTO with any generated values before returning.
+     * Copies properties from the provided DTO to a new entity, saves it, and updates the DTO with any generated or persisted values before returning.
      *
-     * @param dto the attendance summary data to save
-     * @return the updated attendance summary DTO with persisted values
+     * @param dto the attendance summary data to be saved
+     * @return the attendance summary DTO updated with values from the persisted entity
      */
     @Override
     public AttendanceSummaryDto saveSummary(AttendanceSummaryDto dto) {
@@ -36,11 +36,11 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
     }
 
     /**
-     * Retrieves an attendance summary by its unique ID.
+     * Retrieves the attendance summary DTO for the specified unique ID.
      *
      * @param id the unique identifier of the attendance summary
-     * @return the attendance summary data transfer object corresponding to the given ID
-     * @throws ResourceNotFoundException if no attendance summary is found with the specified ID
+     * @return the corresponding attendance summary DTO
+     * @throws ResourceNotFoundException if no attendance summary exists with the given ID
      */
     @Override
     public AttendanceSummaryDto getSummaryById(Long id) {
@@ -52,9 +52,9 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
     }
 
     /**
-     * Retrieves all attendance summaries as a list of data transfer objects.
+     * Returns a list of all attendance summaries as data transfer objects.
      *
-     * @return a list of AttendanceSummaryDto objects representing all attendance summaries
+     * @return a list of AttendanceSummaryDto instances representing all attendance summaries
      */
     @Override
     public List<AttendanceSummaryDto> getAllSummaries() {
@@ -66,11 +66,11 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
     }
 
     /**
-     * Updates an existing attendance summary with the provided data.
+     * Updates the attendance summary identified by the given ID with the data from the provided DTO.
      *
-     * @param id the ID of the attendance summary to update
-     * @param dto the data transfer object containing updated attendance summary information
-     * @return the updated attendance summary DTO
+     * @param id the unique identifier of the attendance summary to update
+     * @param dto the DTO containing the updated attendance summary data
+     * @return the DTO reflecting the updated attendance summary
      * @throws ResourceNotFoundException if no attendance summary with the specified ID exists
      */
     @Override

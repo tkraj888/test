@@ -19,11 +19,11 @@ public class AttendanceEmpController {
     private final AttendanceEmpService attendanceService;
 
     /**
-     * Records a login or logout attendance entry for an employee.
+     * Marks an employee's attendance as either login or logout.
      *
-     * @param dto the attendance data to be saved
-     * @param type specifies whether the attendance is for "login" or "logout"
-     * @return the saved attendance entry wrapped in a ResponseEntity
+     * @param dto the attendance details to record
+     * @param type indicates whether the entry is for "login" or "logout"
+     * @return a ResponseEntity containing the saved attendance entry
      */
     @PostMapping("/mark")
     public ResponseEntity<AttendanceEmpCreateDto> markAttendance(
@@ -35,10 +35,10 @@ public class AttendanceEmpController {
     }
 
     /**
-     * Retrieves an employee attendance record by its unique ID.
+     * Retrieves a specific employee attendance record by its unique identifier.
      *
      * @param id the unique identifier of the attendance record
-     * @return a ResponseEntity containing the attendance record DTO
+     * @return a ResponseEntity containing the corresponding AttendanceEmpDto
      */
     @GetMapping("/{id}")
     public ResponseEntity<AttendanceEmpDto> getById(@PathVariable Long id) {
@@ -47,9 +47,9 @@ public class AttendanceEmpController {
     }
 
     /**
-     * Retrieves all employee attendance records.
+     * Returns all employee attendance records.
      *
-     * @return a ResponseEntity containing a list of all AttendanceEmpDto objects
+     * @return a ResponseEntity containing a list of all attendance records as AttendanceEmpDto objects
      */
     @GetMapping
     public ResponseEntity<List<AttendanceEmpDto>> getAll() {
@@ -58,11 +58,11 @@ public class AttendanceEmpController {
     }
 
     /**
-     * Updates an existing attendance record by its ID.
+     * Updates an employee attendance record identified by its ID with new data.
      *
-     * @param id the ID of the attendance record to update
-     * @param dto the updated attendance data
-     * @return the updated attendance record wrapped in a ResponseEntity
+     * @param id the unique identifier of the attendance record to update
+     * @param dto the new attendance data to apply
+     * @return a ResponseEntity containing the updated attendance record
      */
     @PutMapping("/{id}")
     public ResponseEntity<AttendanceEmpDto> updateAttendance(
@@ -74,12 +74,12 @@ public class AttendanceEmpController {
     }
 
     /**
-     * Retrieves attendance records for a specific user within a given date range.
+     * Returns attendance records for a specific user within the specified inclusive date range.
      *
-     * @param userId     the ID of the user whose attendance records are requested
-     * @param startDate  the start date of the range (inclusive), in ISO format
-     * @param endDate    the end date of the range (inclusive), in ISO format
-     * @return a ResponseEntity containing a list of attendance records for the user within the specified date range
+     * @param userId the unique identifier of the user
+     * @param startDate the start date of the range (inclusive)
+     * @param endDate the end date of the range (inclusive)
+     * @return a ResponseEntity containing a list of attendance records for the user in the given date range
      */
     @GetMapping("/user/{userId}/range")
     public ResponseEntity<List<AttendanceEmpDto>> getByDateRange(
@@ -92,12 +92,12 @@ public class AttendanceEmpController {
     }
 
     /**
-     * Retrieves attendance records for a specific user filtered by month and year.
+     * Returns attendance records for a specific user filtered by the given month and year.
      *
-     * @param userId the ID of the user whose attendance records are to be retrieved
-     * @param month the month (1-12) for which attendance records are requested
-     * @param year the year for which attendance records are requested
-     * @return a ResponseEntity containing a list of AttendanceEmpDto objects for the specified user, month, and year
+     * @param userId the unique identifier of the user
+     * @param month the month (1-12) to filter attendance records
+     * @param year the year to filter attendance records
+     * @return a ResponseEntity containing a list of attendance records for the specified user, month, and year
      */
     @GetMapping("/user/{userId}/month")
     public ResponseEntity<List<AttendanceEmpDto>> getByMonth(

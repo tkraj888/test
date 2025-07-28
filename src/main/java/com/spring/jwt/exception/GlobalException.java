@@ -303,6 +303,14 @@ public class GlobalException extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new ResponseDto("Error", null, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Handles ExamOnHolidayException by returning a 400 Bad Request response with error details.
+     *
+     * The response body includes the current timestamp, HTTP status code, an error label indicating invalid event scheduling, and the exception message.
+     *
+     * @param ex the ExamOnHolidayException thrown when an exam is scheduled on a holiday
+     * @return a ResponseEntity containing a map with error details and HTTP 400 status
+     */
     @ExceptionHandler(ExamOnHolidayException.class)
     public ResponseEntity<Map<String, Object>> handleExamOnHolidayException(ExamOnHolidayException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -315,10 +323,10 @@ public class GlobalException extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Handles PaperPatternNotFoundException by returning a 404 Not Found response with error details.
+     * Handles PaperPatternNotFoundException by returning a 404 Not Found response with structured error information.
      *
-     * @param ex the exception indicating the requested paper pattern was not found
-     * @return a response entity containing a timestamp, status code, error label, and exception message
+     * @param ex the exception indicating that the requested paper pattern was not found
+     * @return a ResponseEntity containing a timestamp, status code, error label, and exception message
      */
     @ExceptionHandler(PaperPatternNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handlePaperPatternNotFoundException(PaperPatternNotFoundException ex) {
@@ -331,10 +339,10 @@ public class GlobalException extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
     /**
-     * Handles ResourceAlreadyExistsException by returning a 409 Conflict response with a structured error message.
+     * Handles ResourceAlreadyExistsException and returns a 409 Conflict response with error details.
      *
-     * @param ex the exception indicating the resource already exists
-     * @return a ResponseEntity containing error details and HTTP 409 status
+     * @param ex the exception indicating that the resource already exists
+     * @return a ResponseEntity with a structured error body and HTTP 409 status
      */
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<Object> handleAlreadyExists(ResourceAlreadyExistsException ex) {
@@ -342,10 +350,10 @@ public class GlobalException extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Handles IllegalArgumentException by returning a 400 Bad Request response with a structured error message.
+     * Handles IllegalArgumentException and returns a 400 Bad Request response with a standardized error body.
      *
-     * @param ex the IllegalArgumentException thrown during request processing
-     * @return a ResponseEntity containing error details and HTTP 400 status
+     * @param ex the exception indicating an invalid argument was provided
+     * @return a ResponseEntity with error details and HTTP 400 status
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleBadRequest(IllegalArgumentException ex) {
@@ -355,11 +363,11 @@ public class GlobalException extends ResponseEntityExceptionHandler {
 
 
     /**
-     * Constructs a standardized error response containing a timestamp, HTTP status code, reason phrase, and message.
+     * Builds a standardized error response with the current timestamp, HTTP status code, reason phrase, and a custom message.
      *
-     * @param status  the HTTP status to set in the response
-     * @param message the error message to include
-     * @return a ResponseEntity with the error details and specified HTTP status
+     * @param status the HTTP status to use in the response
+     * @param message the error message to include in the response body
+     * @return a ResponseEntity containing a map with error details and the specified HTTP status
      */
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> error = new HashMap<>();

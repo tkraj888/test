@@ -40,9 +40,7 @@ import java.util.Optional;
 public class JwtWithSpringSecurityApplication {
 
 	/**
-	 * Application entry point that initializes the BouncyCastle security provider and starts the Spring Boot application.
-	 *
-	 * Prints an ASCII art banner and startup information, including the server port and API documentation URL, to standard error.
+	 * Application entry point that initializes the BouncyCastle security provider, starts the Spring Boot application, and prints an ASCII art banner with startup information to standard error.
 	 *
 	 * @param args command-line arguments passed to the application
 	 */
