@@ -27,15 +27,22 @@ AttendanceSummaryDto getSummaryById(Long id);
  */
 List<AttendanceSummaryDto> getAllSummaries();
     /**
- * Updates an existing attendance summary identified by the given ID with the provided data.
+ * Updates the attendance summary with the specified ID using the provided data.
  *
- * @param id  the unique identifier of the attendance summary to update
- * @param dto the data transfer object containing updated attendance summary information
- * @return the updated attendance summary as a data transfer object
+ * @param id the unique identifier of the attendance summary to update
+ * @param dto the updated attendance summary data
+ * @return the updated attendance summary
  */
 AttendanceSummaryDto updateSummary(Long id, AttendanceSummaryDto dto);
 
-    MonthlyAttendanceReportDto getMonthlyAttendanceReport(Long userId, String month);
+    /**
+ * Retrieves the monthly attendance report for a specific user and month.
+ *
+ * @param userId the unique identifier of the user
+ * @param month the month for which the attendance report is requested, typically in "YYYY-MM" format
+ * @return the monthly attendance report for the specified user and month
+ */
+MonthlyAttendanceReportDto getMonthlyAttendanceReport(Long userId, String month);
 
 
 }
