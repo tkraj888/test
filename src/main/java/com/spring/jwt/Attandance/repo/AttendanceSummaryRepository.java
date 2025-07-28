@@ -18,6 +18,12 @@ public interface AttendanceSummaryRepository extends JpaRepository<AttendanceSum
  */
 Optional<AttendanceSummary> findByUserIdAndDate(Long userId, LocalDate date);
 
-    List<AttendanceSummary> findByUserId(Long userId);
+    /**
+ * Retrieves all attendance summary records for the specified user.
+ *
+ * @param userId the unique identifier of the user
+ * @return a list of attendance summaries associated with the user
+ */
+List<AttendanceSummary> findByUserId(Long userId);
 
 }
