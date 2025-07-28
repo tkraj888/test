@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PayslipPdfServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.service.impl</a> &gt; <span class="el_source">PayslipPdfServiceImpl.java</span></div><h1>PayslipPdfServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.service.impl;
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import com.spring.jwt.dto.PayslipDTO;
+import com.spring.jwt.service.PayslipPdfService;
+import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+
+@Service
+<span class="nc" id="L14">public class PayslipPdfServiceImpl implements PayslipPdfService {</span>
+    @Override
+    public byte[] generatePayslipPdf(PayslipDTO dto) {
+<span class="nc" id="L17">        Document document = new Document(PageSize.A4, 36, 36, 36, 36); // margins</span>
+<span class="nc" id="L18">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+
+        try {
+<span class="nc" id="L21">            PdfWriter.getInstance(document, baos);</span>
+<span class="nc" id="L22">            document.open();</span>
+
+<span class="nc" id="L24">            Font headingFont = new Font(Font.HELVETICA, 14, Font.BOLD);</span>
+<span class="nc" id="L25">            Font subHeadingFont = new Font(Font.HELVETICA, 12, Font.NORMAL);</span>
+<span class="nc" id="L26">            Font labelFont = new Font(Font.HELVETICA, 10, Font.BOLD);</span>
+<span class="nc" id="L27">            Font valueFont = new Font(Font.HELVETICA, 10, Font.NORMAL);</span>
+
+            // Header
+<span class="nc" id="L30">            Paragraph title = new Paragraph(&quot;GTasterix IT Services Pvt. Ltd&quot;, headingFont);</span>
+<span class="nc" id="L31">            title.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L32">            document.add(title);</span>
+
+<span class="nc" id="L34">            Paragraph address = new Paragraph(&quot;Gera's Imperium Rise, Hinjawadi Phase II, Pune, India - 442203&quot;, subHeadingFont);</span>
+<span class="nc" id="L35">            address.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L36">            address.setSpacingAfter(10);</span>
+<span class="nc" id="L37">            document.add(address);</span>
+
+<span class="nc" id="L39">            Paragraph payMonth = new Paragraph(&quot;Pay Slip for &quot; + dto.getMonth() + &quot; &quot; + dto.getYear(), labelFont);</span>
+<span class="nc" id="L40">            payMonth.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L41">            payMonth.setSpacingAfter(10);</span>
+<span class="nc" id="L42">            document.add(payMonth);</span>
+
+            // Employee info
+<span class="nc" id="L45">            PdfPTable empTable = new PdfPTable(2);</span>
+<span class="nc" id="L46">            empTable.setWidthPercentage(100);</span>
+<span class="nc" id="L47">            empTable.setSpacingAfter(10);</span>
+<span class="nc" id="L48">            empTable.addCell(getCell(&quot;Name: &quot; + dto.getName(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L49">            empTable.addCell(getCell(&quot;Employee ID: &quot; + dto.getEmployeeId(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L50">            empTable.addCell(getCell(&quot;Designation: &quot; + dto.getDesignation(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L51">            empTable.addCell(getCell(&quot;Bank Name: &quot; + dto.getBankName(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L52">            empTable.addCell(getCell(&quot;Department: &quot; + dto.getDepartment(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L53">            empTable.addCell(getCell(&quot;Account No: &quot; + dto.getBankAccountNumber(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L54">            empTable.addCell(getCell(&quot;Location: &quot; + dto.getLocation(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L55">            empTable.addCell(getCell(&quot;PAN: &quot; + dto.getPan(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L56">            empTable.addCell(getCell(&quot;Date of Joining: &quot; + dto.getDateOfJoining(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L57">            empTable.addCell(getCell(&quot;LOP: &quot; + dto.getAbsentDays(), PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L58">            document.add(empTable);</span>
+
+            // Earnings table
+<span class="nc" id="L61">            PdfPTable earnings = new PdfPTable(2);</span>
+<span class="nc" id="L62">            earnings.setWidthPercentage(100);</span>
+<span class="nc" id="L63">            earnings.setSpacingAfter(10);</span>
+<span class="nc" id="L64">            earnings.addCell(getBoldCell(&quot;Earnings&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L65">            earnings.addCell(getBoldCell(&quot;Amount (₹)&quot;, PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L66">            earnings.addCell(getCell(&quot;Basic&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L67">            earnings.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getBasicPay()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L68">            earnings.addCell(getCell(&quot;HRA&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L69">            earnings.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getHra()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L70">            earnings.addCell(getCell(&quot;DA&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L71">            earnings.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getDa()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L72">            earnings.addCell(getCell(&quot;LTA&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L73">            earnings.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getTravelAllowances()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L74">            earnings.addCell(getCell(&quot;Special Allowance&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L75">            earnings.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getSpecialAllowances()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L76">            earnings.addCell(getBoldCell(&quot;Total Earnings&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L77">            earnings.addCell(getBoldCell(String.format(&quot;%.2f&quot;, dto.getTotalEarnings()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L78">            document.add(earnings);</span>
+
+            // Deductions table
+<span class="nc" id="L81">            PdfPTable deductions = new PdfPTable(2);</span>
+<span class="nc" id="L82">            deductions.setWidthPercentage(100);</span>
+<span class="nc" id="L83">            deductions.setSpacingAfter(10);</span>
+<span class="nc" id="L84">            deductions.addCell(getBoldCell(&quot;Deductions&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L85">            deductions.addCell(getBoldCell(&quot;Amount (₹)&quot;, PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L86">            deductions.addCell(getCell(&quot;Income Tax&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L87">            deductions.addCell(getCell(&quot;0.00&quot;, PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L88">            deductions.addCell(getCell(&quot;Provident Fund&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L89">            deductions.addCell(getCell(&quot;0.00&quot;, PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L90">            deductions.addCell(getCell(&quot;Professional Tax&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L91">            deductions.addCell(getCell(String.format(&quot;%.2f&quot;, dto.getTotalDeductions()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L92">            deductions.addCell(getBoldCell(&quot;Total Deductions&quot;, PdfPCell.ALIGN_LEFT));</span>
+<span class="nc" id="L93">            deductions.addCell(getBoldCell(String.format(&quot;%.2f&quot;, dto.getTotalDeductions()), PdfPCell.ALIGN_RIGHT));</span>
+<span class="nc" id="L94">            document.add(deductions);</span>
+
+            // Net Pay
+<span class="nc" id="L97">            Paragraph netPay = new Paragraph(&quot;Net Pay for the Month: ₹ &quot; + String.format(&quot;%.2f&quot;, dto.getNetSalary()), headingFont);</span>
+<span class="nc" id="L98">            netPay.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L99">            netPay.setSpacingBefore(10);</span>
+<span class="nc" id="L100">            netPay.setSpacingAfter(10);</span>
+<span class="nc" id="L101">            document.add(netPay);</span>
+
+<span class="nc" id="L103">            Paragraph footer = new Paragraph(&quot;This is a system-generated payslip and does not require a signature.&quot;, valueFont);</span>
+<span class="nc" id="L104">            footer.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L105">            document.add(footer);</span>
+
+<span class="nc" id="L107">            document.close();</span>
+<span class="nc" id="L108">        } catch (Exception e) {</span>
+<span class="nc" id="L109">            e.printStackTrace();</span>
+<span class="nc" id="L110">        }</span>
+
+<span class="nc" id="L112">        return baos.toByteArray();</span>
+    }
+
+    // Helpers for styling
+    private PdfPCell getCell(String text, int alignment) {
+<span class="nc" id="L117">        PdfPCell cell = new PdfPCell(new Phrase(text));</span>
+<span class="nc" id="L118">        cell.setPadding(5);</span>
+<span class="nc" id="L119">        cell.setBorder(PdfPCell.NO_BORDER);</span>
+<span class="nc" id="L120">        cell.setHorizontalAlignment(alignment);</span>
+<span class="nc" id="L121">        return cell;</span>
+    }
+
+    private PdfPCell getBoldCell(String text, int alignment) {
+<span class="nc" id="L125">        Font boldFont = new Font(Font.HELVETICA, 10, Font.BOLD);</span>
+<span class="nc" id="L126">        PdfPCell cell = new PdfPCell(new Phrase(text, boldFont));</span>
+<span class="nc" id="L127">        cell.setPadding(5);</span>
+<span class="nc" id="L128">        cell.setBorder(PdfPCell.NO_BORDER);</span>
+<span class="nc" id="L129">        cell.setHorizontalAlignment(alignment);</span>
+<span class="nc" id="L130">        return cell;</span>
+    }
+
+
+    //    @Override
+//    public byte[] generatePayslipPdf(PayslipDTO dto) {
+//        Document document = new Document();
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//        try {
+//            PdfWriter.getInstance(document, baos);
+//            document.open();
+//
+//            Font bold = new Font(Font.HELVETICA, 12, Font.BOLD);
+//
+//            document.add(new Paragraph(&quot;GTasterix IT Services Pvt. Ltd&quot;, bold));
+//            document.add(new Paragraph(&quot;Gera's Imperium Rise, Hinjawadi Phase II, Pune, India - 442203&quot;));
+//            document.add(new Paragraph(&quot; &quot;));
+//            document.add(new Paragraph(&quot;Pay Slip for &quot; + dto.getMonth() + &quot; &quot; + dto.getYear(), bold));
+//            document.add(new Paragraph(&quot; &quot;));
+//
+//            // Employee Info Table
+//            PdfPTable empTable = new PdfPTable(2);
+//            empTable.setWidthPercentage(100);
+//            empTable.addCell(&quot;Name: &quot; + dto.getName());
+//            empTable.addCell(&quot;Employee ID: &quot; + dto.getEmployeeId());
+//            empTable.addCell(&quot;Designation: &quot; + dto.getDesignation());
+//            empTable.addCell(&quot;Bank Name: &quot; + dto.getBankName());
+//            empTable.addCell(&quot;Department: &quot; + dto.getDepartment());
+//            empTable.addCell(&quot;Account No: &quot; + dto.getBankAccountNumber());
+//            empTable.addCell(&quot;Location: &quot; + dto.getLocation());
+//            empTable.addCell(&quot;PAN: &quot; + dto.getPan());
+//            empTable.addCell(&quot;Date of Joining: &quot; + dto.getDateOfJoining());
+//            empTable.addCell(&quot;LOP: &quot; + dto.getAbsentDays());
+//
+//            document.add(empTable);
+//            document.add(new Paragraph(&quot; &quot;));
+//
+//            // Salary Table
+//            PdfPTable salaryTable = new PdfPTable(2);
+//            salaryTable.setWidthPercentage(100);
+//            salaryTable.addCell(new Phrase(&quot;Earnings&quot;, bold));
+//            salaryTable.addCell(new Phrase(&quot;Amount&quot;, bold));
+//            salaryTable.addCell(&quot;Basic&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getBasicPay()));
+//            salaryTable.addCell(&quot;HRA&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getHra()));
+//            salaryTable.addCell(&quot;DA&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getDa()));
+//            salaryTable.addCell(&quot;LTA&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getTravelAllowances()));
+//            salaryTable.addCell(&quot;Special Allowance&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getSpecialAllowances()));
+//            salaryTable.addCell(&quot;Total Earnings&quot;);
+//            salaryTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getTotalEarnings()));
+//
+//            document.add(salaryTable);
+//            document.add(new Paragraph(&quot; &quot;));
+//
+//            // Deductions
+//            PdfPTable deductionTable = new PdfPTable(2);
+//            deductionTable.setWidthPercentage(100);
+//            deductionTable.addCell(new Phrase(&quot;Deductions&quot;, bold));
+//            deductionTable.addCell(new Phrase(&quot;Amount&quot;, bold));
+//            deductionTable.addCell(&quot;Income Tax&quot;);
+//            deductionTable.addCell(&quot;₹ 0.00&quot;);
+//            deductionTable.addCell(&quot;Provident Fund&quot;);
+//            deductionTable.addCell(&quot;₹ 0.00&quot;);
+//            deductionTable.addCell(&quot;Professional Tax&quot;);
+//            deductionTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getTotalDeductions()));
+//            deductionTable.addCell(&quot;Total Deductions&quot;);
+//            deductionTable.addCell(&quot;₹ &quot; + String.format(&quot;%.2f&quot;, dto.getTotalDeductions()));
+//
+//            document.add(deductionTable);
+//            document.add(new Paragraph(&quot; &quot;));
+//
+//            // Net Pay
+//            Paragraph netPay = new Paragraph(&quot;Net Pay for the Month: ₹ &quot; + String.format(&quot;%.2f&quot;, dto.getNetSalary()), bold);
+//            document.add(netPay);
+//
+//            document.add(new Paragraph(&quot; &quot;));
+//            document.add(new Paragraph(&quot;This is a system-generated payslip and does not require a signature.&quot;));
+//
+//            document.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return baos.toByteArray();
+//    }
+@Override
+public byte[] generatePayslipPdfFromHtml(String html) {
+<span class="nc" id="L222">    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L223">        PdfRendererBuilder builder = new PdfRendererBuilder();</span>
+<span class="nc" id="L224">        builder.useFastMode();</span>
+<span class="nc" id="L225">        builder.useFont(new File(&quot;src/main/resources/fonts/DejaVuSans.ttf&quot;), &quot;DejaVuSans&quot;);</span>
+<span class="nc" id="L226">        builder.withHtmlContent(html, null);</span>
+<span class="nc" id="L227">        builder.toStream(outputStream);</span>
+<span class="nc" id="L228">        builder.run();</span>
+<span class="nc" id="L229">        return outputStream.toByteArray();</span>
+<span class="nc" id="L230">    } catch (Exception e) {</span>
+<span class="nc" id="L231">        throw new RuntimeException(&quot;PDF generation failed&quot;, e);</span>
+    }
+}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

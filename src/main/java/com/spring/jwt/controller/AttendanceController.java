@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/attendance")
+@RequestMapping("/api/v1/attendancePay")
 @CrossOrigin
 public class AttendanceController {
 

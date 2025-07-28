@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttendanceController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.controller</a> &gt; <span class="el_source">AttendanceController.java</span></div><h1>AttendanceController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.controller;
+
+import com.spring.jwt.dto.AttendanceDTO;
+import com.spring.jwt.dto.PayslipDTO;
+import com.spring.jwt.entity.Payslip;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import com.spring.jwt.repository.PayslipRepository;
+import com.spring.jwt.service.AttendanceService;
+import com.spring.jwt.service.PayslipPdfService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/v1/attendance&quot;)
+@CrossOrigin
+<span class="nc" id="L25">public class AttendanceController {</span>
+
+    @Autowired
+    private AttendanceService attendanceService;
+    @Autowired
+    public PayslipRepository payslipRepository;
+    @Autowired
+    public PayslipPdfService payslipPdfService;
+
+    @Autowired
+    private SpringTemplateEngine templateEngine;
+
+    @PostMapping
+    public ResponseEntity&lt;AttendanceDTO&gt; create(@RequestBody AttendanceDTO dto) {
+<span class="nc" id="L39">        return ResponseEntity.ok(attendanceService.createAttendance(dto));</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceDTO&gt; get(@PathVariable Long id) {
+<span class="nc" id="L44">        return ResponseEntity.ok(attendanceService.getAttendance(id));</span>
+    }
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;AttendanceDTO&gt;&gt; getAll() {
+<span class="nc" id="L49">        return ResponseEntity.ok(attendanceService.getAll());</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceDTO&gt; update(@PathVariable Long id, @RequestBody AttendanceDTO dto) {
+<span class="nc" id="L54">        return ResponseEntity.ok(attendanceService.updateAttendance(id, dto));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;String&gt; delete(@PathVariable Long id) {
+<span class="nc" id="L59">        attendanceService.deleteAttendance(id);</span>
+<span class="nc" id="L60">        return ResponseEntity.ok(&quot;Attendance deleted for ID: &quot; + id);</span>
+    }
+
+    @GetMapping(&quot;/payslip&quot;)
+    public ResponseEntity&lt;PayslipDTO&gt; getPayslip(
+            @RequestParam Integer userId,
+            @RequestParam String month,
+            @RequestParam Integer year
+    ) {
+<span class="nc" id="L69">        Payslip payslip = payslipRepository.findByUserIdAndMonthAndYear(userId, month, year)</span>
+<span class="nc" id="L70">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Payslip not found&quot;));</span>
+
+<span class="nc" id="L72">        PayslipDTO dto = convertToDTO(payslip);</span>
+<span class="nc" id="L73">        return ResponseEntity.ok(dto);</span>
+    }
+
+    @GetMapping(&quot;/payslip/pdf&quot;)
+    public ResponseEntity&lt;byte[]&gt; downloadPdf(
+            @RequestParam Integer userId,
+            @RequestParam String month,
+            @RequestParam Integer year
+    ) {
+<span class="nc" id="L82">        Payslip payslip = payslipRepository.findByUserIdAndMonthAndYear(userId, month, year)</span>
+<span class="nc" id="L83">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Payslip not found&quot;));</span>
+
+<span class="nc" id="L85">        PayslipDTO dto = convertToDTO(payslip);</span>
+<span class="nc" id="L86">        byte[] pdf = payslipPdfService.generatePayslipPdf(dto);</span>
+
+<span class="nc" id="L88">        return ResponseEntity.ok()</span>
+<span class="nc" id="L89">                .header(HttpHeaders.CONTENT_DISPOSITION, &quot;attachment; filename=payslip_&quot; + month + &quot;_&quot; + year + &quot;.pdf&quot;)</span>
+<span class="nc" id="L90">                .contentType(MediaType.APPLICATION_PDF)</span>
+<span class="nc" id="L91">                .body(pdf);</span>
+    }
+
+    @GetMapping(&quot;/pdf&quot;)
+    public ResponseEntity&lt;?&gt; downloadPayslipPdf(@RequestParam Integer userId,
+                                                @RequestParam String month,
+                                                @RequestParam Integer year) {
+        try {
+<span class="nc" id="L99">            Payslip payslip = payslipRepository.findByUserIdAndMonthAndYear(userId, month, year)</span>
+<span class="nc" id="L100">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Payslip not found&quot;));</span>
+
+<span class="nc" id="L102">            PayslipDTO dto = convertToDTO(payslip);</span>
+<span class="nc" id="L103">            String html = generateHtmlFromTemplate(dto);</span>
+<span class="nc" id="L104">            byte[] pdfBytes = payslipPdfService.generatePayslipPdfFromHtml(html);</span>
+
+<span class="nc" id="L106">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L107">            headers.setContentType(MediaType.APPLICATION_PDF);</span>
+<span class="nc" id="L108">            headers.setContentDisposition(ContentDisposition.attachment()</span>
+<span class="nc" id="L109">                    .filename(&quot;Payslip_&quot; + month + &quot;_&quot; + year + &quot;.pdf&quot;).build());</span>
+
+<span class="nc" id="L111">            return new ResponseEntity&lt;&gt;(pdfBytes, headers, HttpStatus.OK);</span>
+
+<span class="nc" id="L113">        } catch (ResourceNotFoundException ex) {</span>
+<span class="nc" id="L114">            return ResponseEntity.status(HttpStatus.FOUND)</span>
+<span class="nc" id="L115">                    .header(&quot;Location&quot;, &quot;/login?error=&quot; + ex.getMessage())</span>
+<span class="nc" id="L116">                    .build();</span>
+<span class="nc" id="L117">        } catch (IOException ex) {</span>
+<span class="nc" id="L118">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(&quot;Error loading payslip template.&quot;);</span>
+        }
+    }
+
+    private PayslipDTO convertToDTO(Payslip payslip) {
+<span class="nc" id="L123">        PayslipDTO dto = new PayslipDTO();</span>
+<span class="nc" id="L124">        BeanUtils.copyProperties(payslip, dto);</span>
+<span class="nc" id="L125">        return dto;</span>
+    }
+
+    private String generateHtmlFromTemplate(PayslipDTO dto) throws IOException {
+<span class="nc" id="L129">        String templatePath = &quot;src/main/resources/templates/payslipTemplate.html&quot;;</span>
+<span class="nc" id="L130">        String htmlTemplate = new String(Files.readAllBytes(Paths.get(templatePath)), StandardCharsets.UTF_8);</span>
+
+<span class="nc" id="L132">        return htmlTemplate</span>
+<span class="nc" id="L133">                .replace(&quot;${name}&quot;, dto.getName())</span>
+<span class="nc" id="L134">                .replace(&quot;${employeeId}&quot;, dto.getEmployeeId())</span>
+<span class="nc" id="L135">                .replace(&quot;${designation}&quot;, dto.getDesignation())</span>
+<span class="nc" id="L136">                .replace(&quot;${bankName}&quot;, dto.getBankName())</span>
+<span class="nc" id="L137">                .replace(&quot;${department}&quot;, dto.getDepartment())</span>
+<span class="nc" id="L138">                .replace(&quot;${bankAccountNumber}&quot;, dto.getBankAccountNumber())</span>
+<span class="nc" id="L139">                .replace(&quot;${location}&quot;, dto.getLocation())</span>
+<span class="nc" id="L140">                .replace(&quot;${pan}&quot;, dto.getPan())</span>
+<span class="nc" id="L141">                .replace(&quot;${dateOfJoining}&quot;, dto.getDateOfJoining())</span>
+<span class="nc" id="L142">                .replace(&quot;${absentDays}&quot;, String.valueOf(dto.getAbsentDays()))</span>
+<span class="nc" id="L143">                .replace(&quot;${month}&quot;, dto.getMonth())</span>
+<span class="nc" id="L144">                .replace(&quot;${year}&quot;, String.valueOf(dto.getYear()))</span>
+<span class="nc" id="L145">                .replace(&quot;${basicPay}&quot;, String.valueOf(dto.getBasicPay()))</span>
+<span class="nc" id="L146">                .replace(&quot;${hra}&quot;, String.valueOf(dto.getHra()))</span>
+<span class="nc" id="L147">                .replace(&quot;${da}&quot;, String.valueOf(dto.getDa()))</span>
+<span class="nc" id="L148">                .replace(&quot;${travelAllowances}&quot;, String.valueOf(dto.getTravelAllowances()))</span>
+<span class="nc" id="L149">                .replace(&quot;${specialAllowances}&quot;, String.valueOf(dto.getSpecialAllowances()))</span>
+<span class="nc" id="L150">                .replace(&quot;${totalEarnings}&quot;, String.valueOf(dto.getTotalEarnings()))</span>
+<span class="nc" id="L151">                .replace(&quot;${totalDeductions}&quot;, String.valueOf(dto.getTotalDeductions()))</span>
+<span class="nc" id="L152">                .replace(&quot;${netSalary}&quot;, String.valueOf(dto.getNetSalary()))</span>
+<span class="nc" id="L153">                .replace(&quot;${workingDays}&quot;, String.valueOf(dto.getPresentDays()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
