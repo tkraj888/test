@@ -1,6 +1,7 @@
 package com.spring.jwt.Attandance.Service;
 
 import com.spring.jwt.Attandance.Dto.AttendanceSummaryDto;
+import com.spring.jwt.Attandance.Dto.MonthlyAttendanceReportDto;
 
 import java.util.List;
 
@@ -33,5 +34,8 @@ List<AttendanceSummaryDto> getAllSummaries();
  * @return the updated attendance summary as a data transfer object
  */
 AttendanceSummaryDto updateSummary(Long id, AttendanceSummaryDto dto);
+
+    MonthlyAttendanceReportDto getMonthlyAttendanceReport(Long userId, String month);
+
 
 }

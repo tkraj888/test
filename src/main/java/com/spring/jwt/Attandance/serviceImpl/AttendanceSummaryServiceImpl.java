@@ -1,6 +1,8 @@
 package com.spring.jwt.Attandance.serviceImpl;
 
+import com.spring.jwt.Attandance.Dto.AttendanceSummaryDailyDto;
 import com.spring.jwt.Attandance.Dto.AttendanceSummaryDto;
+import com.spring.jwt.Attandance.Dto.MonthlyAttendanceReportDto;
 import com.spring.jwt.Attandance.entity.AttendanceSummary;
 import com.spring.jwt.Attandance.repo.AttendanceSummaryRepository;
 import com.spring.jwt.Attandance.Service.AttendanceSummaryService;
@@ -9,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,6 +86,65 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
         repo.save(entity);
         return dto;
     }
+    @Override
+    public MonthlyAttendanceReportDto getMonthlyAttendanceReport(Long userId, String month) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+
+        // Get all records for the user
+        List<AttendanceSummary> allSummaries = repo.findByUserId(userId);
+
+        // Filter by month (yyyy-MM format)
+        List<AttendanceSummary> summaries = allSummaries.stream()
+                .filter(summary -> summary.getDate() != null && summary.getDate().format(formatter).equals(month))
+                .collect(Collectors.toList());
+
+        // Initialize counters
+        int present = 0;
+        int halfDay = 0;
+        int absent = 0;
+
+        // Prepare daily summary list
+        List<AttendanceSummaryDailyDto> dailyDtos = new ArrayList<>();
+
+        for (AttendanceSummary summary : summaries) {
+            AttendanceSummaryDailyDto dto = new AttendanceSummaryDailyDto();
+            dto.setDate(summary.getDate());
+            dto.setTotalWorkingHours(summary.getTotalWorkingHours());
+            dto.setAttendanceStatus(summary.getAttendanceStatus());
+
+            String status = summary.getAttendanceStatus();
+            if (status != null) {
+                switch (status.toLowerCase()) {
+                    case "present":
+                        present++;
+                        break;
+                    case "half day":
+                        halfDay++;
+                        break;
+                    case "absent":
+                        absent++;
+                        break;
+                    // You can handle more statuses here if needed
+                }
+            }
+
+            dailyDtos.add(dto);
+        }
+
+        // Prepare final report DTO
+        MonthlyAttendanceReportDto report = new MonthlyAttendanceReportDto();
+        report.setUserId(userId);
+        report.setMonth(month);
+        report.setPresentDays(present);
+        report.setHalfDays(halfDay);
+        report.setAbsentDays(absent);
+        report.setTotalPresentEquivalent(present + (halfDay / 2.0));
+        report.setDailySummaries(dailyDtos);
+
+        return report;
+    }
+
+
 
 
 }
