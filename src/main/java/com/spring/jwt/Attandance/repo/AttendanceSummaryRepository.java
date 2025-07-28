@@ -7,5 +7,12 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface AttendanceSummaryRepository extends JpaRepository<AttendanceSummary, Long> {
-    Optional<AttendanceSummary> findByUserIdAndDate(Long userId, LocalDate date);
+    /**
+ * Retrieves an attendance summary for a specific user on a given date.
+ *
+ * @param userId the ID of the user whose attendance summary is to be retrieved
+ * @param date the date for which the attendance summary is requested
+ * @return an {@code Optional} containing the attendance summary if found, or empty if not present
+ */
+Optional<AttendanceSummary> findByUserIdAndDate(Long userId, LocalDate date);
 }

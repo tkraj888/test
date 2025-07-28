@@ -29,6 +29,21 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
     private final UserRepository userRepository;
     private final AttendanceSummaryRepository summaryRepo;
 
+    /**
+     * Saves an employee's attendance action for the current day, handling login, logout, or leave based on the specified type.
+     *
+     * Depending on the type parameter:
+     * <ul>
+     *   <li><b>"login"</b>: Marks the user's login time and work mode for today if not already marked.</li>
+     *   <li><b>"logout"</b>: Marks the user's logout time, calculates working hours, and updates the attendance summary with status ("Absent", "Half-Day", or "Present") based on hours worked. Requires a prior login.</li>
+     *   <li><b>"leave"</b>: Marks the day as leave in the attendance summary if no attendance is already recorded for today.</li>
+     * </ul>
+     * Throws exceptions if the user does not exist, if attendance actions are duplicated, or if the type is invalid.
+     *
+     * @param dto  Data transfer object containing user ID and work mode.
+     * @param type The attendance action type: "login", "logout", or "leave".
+     * @return A DTO containing the user ID and work mode of the saved attendance record.
+     */
     @Override
     @Transactional
     public AttendanceEmpCreateDto saveAttendance(AttendanceEmpCreateDto dto, String type) {
@@ -111,6 +126,13 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
         return response;
     }
 
+    /**
+     * Retrieves an employee attendance record by its unique ID.
+     *
+     * @param id the unique identifier of the attendance record
+     * @return the attendance record as a DTO
+     * @throws ResourceNotFoundException if no attendance record exists with the specified ID
+     */
     @Override
     public AttendanceEmpDto getAttendanceById(Long id) {
         AttendanceEmp entity = repo.findById(id)
@@ -120,6 +142,11 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
         return dto;
     }
 
+    /**
+     * Retrieves all employee attendance records.
+     *
+     * @return a list of attendance DTOs representing all attendance entries in the system
+     */
     @Override
     public List<AttendanceEmpDto> getAllAttendance() {
         return repo.findAll().stream().map(emp -> {
@@ -129,6 +156,16 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Updates an existing employee attendance record with new values and recalculates working hours and attendance status if applicable.
+     *
+     * If both login and logout times are present after the update, the method recalculates working hours and updates or creates the corresponding attendance summary with the appropriate attendance status.
+     *
+     * @param id the ID of the attendance record to update
+     * @param dto the data transfer object containing updated attendance information
+     * @return the updated attendance record as a DTO
+     * @throws ResourceNotFoundException if the attendance record with the specified ID does not exist
+     */
     @Override
     public AttendanceEmpDto updateAttendance(Long id, AttendanceEmpDto dto) {
         AttendanceEmp entity = repo.findById(id)
@@ -165,6 +202,16 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
         return response;
     }
 
+    /**
+     * Retrieves attendance records for a specific user within a given date range.
+     *
+     * @param userId the ID of the user whose attendance records are to be retrieved
+     * @param startDate the start date of the range (inclusive)
+     * @param endDate the end date of the range (inclusive)
+     * @return a list of attendance DTOs for the specified user and date range
+     * @throws ResourceNotFoundException if the user does not exist or no attendance records are found in the range
+     * @throws IllegalArgumentException if the date range is invalid
+     */
     @Override
     public List<AttendanceEmpDto> getAttendanceByUserIdAndDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
         if (!userRepository.existsById(userId)) {
@@ -187,6 +234,16 @@ public class AttendanceEmpServiceImpl implements AttendanceEmpService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves attendance records for a specific user within a given month and year.
+     *
+     * @param userId the ID of the user whose attendance records are to be retrieved
+     * @param month the month (1-12) for which attendance records are requested
+     * @param year the year for which attendance records are requested
+     * @return a list of attendance DTOs for the specified user and month
+     * @throws ResourceNotFoundException if the user does not exist or no attendance records are found for the given period
+     * @throws IllegalArgumentException if the month value is not between 1 and 12
+     */
     @Override
     public List<AttendanceEmpDto> getAttendanceByUserIdAndMonth(Long userId, int month, int year) {
         if (!userRepository.existsById(userId)) {
