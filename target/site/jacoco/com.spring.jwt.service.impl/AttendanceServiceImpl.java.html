@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttendanceServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.service.impl</a> &gt; <span class="el_source">AttendanceServiceImpl.java</span></div><h1>AttendanceServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.service.impl;
+
+import com.spring.jwt.dto.AttendanceDTO;
+import com.spring.jwt.entity.Attendance;
+import com.spring.jwt.entity.Employee;
+import com.spring.jwt.entity.Payslip;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import com.spring.jwt.repository.AttendanceRepository;
+import com.spring.jwt.repository.EmployeeRepository;
+import com.spring.jwt.repository.PayslipRepository;
+import com.spring.jwt.service.AttendanceService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+<span class="nc" id="L20">public class AttendanceServiceImpl implements AttendanceService {</span>
+
+    @Autowired
+    private AttendanceRepository repository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private PayslipRepository payslipRepository;
+    private AttendanceDTO convertToDTO(Attendance attendance) {
+<span class="nc" id="L31">        AttendanceDTO dto = new AttendanceDTO();</span>
+<span class="nc" id="L32">        BeanUtils.copyProperties(attendance, dto);</span>
+<span class="nc" id="L33">        return dto;</span>
+    }
+
+    private Attendance convertToEntity(AttendanceDTO dto) {
+<span class="nc" id="L37">        Attendance attendance = new Attendance();</span>
+<span class="nc" id="L38">        BeanUtils.copyProperties(dto, attendance);</span>
+<span class="nc" id="L39">        return attendance;</span>
+    }
+
+
+    @Override
+    public AttendanceDTO createAttendance(AttendanceDTO dto) {
+        // Step 1: Save attendance
+<span class="nc" id="L46">        Attendance saved = repository.save(convertToEntity(dto));</span>
+
+        // Step 2: Fetch employee
+<span class="nc" id="L49">        Employee emp = employeeRepository.findByUserId(Integer.valueOf(dto.getEmployeeId()))</span>
+<span class="nc" id="L50">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Employee not found&quot;));</span>
+
+        // Step 3: Salary calculation
+<span class="nc" id="L53">        double monthlyIncentive = emp.getYearlyIncentive() / 12;</span>
+<span class="nc" id="L54">        double monthlyGross = emp.getBasicPay() + emp.getHra() + emp.getSpecialAllowances()</span>
+<span class="nc" id="L55">                + emp.getTravelAllowances() + emp.getDa() + monthlyIncentive;</span>
+
+<span class="nc" id="L57">        double perDay = monthlyGross / dto.getTotalDays();</span>
+<span class="nc" id="L58">        double earned = perDay * dto.getPresentDays();</span>
+<span class="nc" id="L59">        double net = earned - emp.getTotalDeductions();</span>
+
+        // Step 4: Save Payslip
+<span class="nc" id="L62">        Payslip payslip = new Payslip();</span>
+<span class="nc" id="L63">        payslip.setUserId(emp.getUserId());</span>
+<span class="nc" id="L64">        payslip.setMonth(dto.getMonth());</span>
+<span class="nc" id="L65">        payslip.setYear(dto.getYear());</span>
+
+        // ✅ Copy employee info snapshot
+<span class="nc" id="L68">        payslip.setName(emp.getName());</span>
+<span class="nc" id="L69">        payslip.setDesignation(emp.getDesignation());</span>
+<span class="nc" id="L70">        payslip.setDepartment(emp.getDepartment());</span>
+<span class="nc" id="L71">        payslip.setLocation(emp.getLocation());</span>
+<span class="nc" id="L72">        payslip.setDateOfJoining(emp.getDateOfJoining());</span>
+<span class="nc" id="L73">        payslip.setEmployeeId(emp.getEmployeeId());</span>
+<span class="nc" id="L74">        payslip.setBankName(emp.getBankName());</span>
+<span class="nc" id="L75">        payslip.setBankAccountNumber(emp.getBankAccountNumber());</span>
+<span class="nc" id="L76">        payslip.setPan(emp.getPan());</span>
+
+        // ✅ Salary components
+<span class="nc" id="L79">        payslip.setBasicPay(emp.getBasicPay());</span>
+<span class="nc" id="L80">        payslip.setHra(emp.getHra());</span>
+<span class="nc" id="L81">        payslip.setSpecialAllowances(emp.getSpecialAllowances());</span>
+<span class="nc" id="L82">        payslip.setTravelAllowances(emp.getTravelAllowances());</span>
+<span class="nc" id="L83">        payslip.setDa(emp.getDa());</span>
+<span class="nc" id="L84">        payslip.setYearlyIncentive(emp.getYearlyIncentive());</span>
+<span class="nc" id="L85">        payslip.setTotalDeductions(emp.getTotalDeductions());</span>
+
+        // ✅ Attendance summary
+<span class="nc" id="L88">        payslip.setTotalDays(dto.getTotalDays());</span>
+<span class="nc" id="L89">        payslip.setPresentDays(dto.getPresentDays());</span>
+<span class="nc" id="L90">        payslip.setAbsentDays(dto.getAbsentDays());</span>
+
+        // ✅ Final salary
+<span class="nc" id="L93">        payslip.setTotalEarnings(earned);</span>
+<span class="nc" id="L94">        payslip.setNetSalary(net);</span>
+
+<span class="nc" id="L96">        payslipRepository.save(payslip);</span>
+
+<span class="nc" id="L98">        return convertToDTO(saved);</span>
+    }
+
+
+    @Override
+    public AttendanceDTO getAttendance(Long id) {
+<span class="nc" id="L104">        return repository.findById(id)</span>
+<span class="nc" id="L105">                .map(this::convertToDTO)</span>
+<span class="nc" id="L106">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Attendance not found with ID: &quot; + id));</span>
+    }
+
+    @Override
+    public List&lt;AttendanceDTO&gt; getAll() {
+<span class="nc" id="L111">        return repository.findAll()</span>
+<span class="nc" id="L112">                .stream()</span>
+<span class="nc" id="L113">                .map(this::convertToDTO)</span>
+<span class="nc" id="L114">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    public AttendanceDTO updateAttendance(Long id, AttendanceDTO dto) {
+<span class="nc" id="L119">        Attendance att = repository.findById(id)</span>
+<span class="nc" id="L120">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Attendance not found with ID: &quot; + id));</span>
+
+<span class="nc" id="L122">        att.setEmployeeId(dto.getEmployeeId());</span>
+<span class="nc" id="L123">        att.setMonth(dto.getMonth());</span>
+<span class="nc" id="L124">        att.setYear(dto.getYear());</span>
+<span class="nc" id="L125">        att.setPresentDays(dto.getPresentDays());</span>
+<span class="nc" id="L126">        att.setAbsentDays(dto.getAbsentDays());</span>
+<span class="nc" id="L127">        att.setTotalDays(dto.getTotalDays());</span>
+
+<span class="nc" id="L129">        return convertToDTO(repository.save(att));</span>
+    }
+
+    @Override
+    public void deleteAttendance(Long id) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (!repository.existsById(id)) {</span>
+<span class="nc" id="L135">            throw new ResourceNotFoundException(&quot;Attendance not found with ID: &quot; + id);</span>
+        }
+<span class="nc" id="L137">        repository.deleteById(id);</span>
+<span class="nc" id="L138">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
