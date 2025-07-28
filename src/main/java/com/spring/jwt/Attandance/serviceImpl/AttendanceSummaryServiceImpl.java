@@ -70,12 +70,12 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
     }
 
     /**
-     * Updates an existing attendance summary with the provided data.
+     * Updates an existing attendance summary with new data.
      *
-     * @param id the ID of the attendance summary to update
-     * @param dto the data transfer object containing updated attendance summary information
-     * @return the updated attendance summary DTO
-     * @throws ResourceNotFoundException if no attendance summary with the specified ID exists
+     * @param id the unique identifier of the attendance summary to update
+     * @param dto the DTO containing the updated attendance summary information
+     * @return the DTO reflecting the updated attendance summary
+     * @throws ResourceNotFoundException if no attendance summary with the given ID is found
      */
     @Override
     public AttendanceSummaryDto updateSummary(Long id, AttendanceSummaryDto dto) {
@@ -86,6 +86,17 @@ public class AttendanceSummaryServiceImpl implements AttendanceSummaryService {
         repo.save(entity);
         return dto;
     }
+    /**
+     * Generates a monthly attendance report for a specific user and month.
+     *
+     * Retrieves all attendance summaries for the given user, filters them by the specified month (formatted as "yyyy-MM"),
+     * and calculates the number of present, half-day, and absent days. Constructs a detailed report including daily attendance
+     * summaries and a total present equivalent (present days plus half of half-days).
+     *
+     * @param userId the ID of the user whose attendance is being reported
+     * @param month the month for the report in "yyyy-MM" format
+     * @return a MonthlyAttendanceReportDto containing attendance statistics and daily summaries for the specified month
+     */
     @Override
     public MonthlyAttendanceReportDto getMonthlyAttendanceReport(Long userId, String month) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
