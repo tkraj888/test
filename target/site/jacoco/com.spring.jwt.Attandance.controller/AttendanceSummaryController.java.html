@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttendanceSummaryController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Attandance.controller</a> &gt; <span class="el_source">AttendanceSummaryController.java</span></div><h1>AttendanceSummaryController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Attandance.controller;
+
+import com.spring.jwt.Attandance.Dto.AttendanceSummaryDto;
+import com.spring.jwt.Attandance.Dto.MonthlyAttendanceReportDto;
+import com.spring.jwt.Attandance.Service.AttendanceSummaryService;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/v1/attendanceSummary&quot;)
+<span class="nc" id="L15">@RequiredArgsConstructor</span>
+public class AttendanceSummaryController {
+
+    private final AttendanceSummaryService attendanceSummaryService;
+
+    /**
+     * Saves a new attendance summary and returns the saved summary.
+     *
+     * @param dto the attendance summary data to be saved
+     * @return the saved attendance summary wrapped in a ResponseEntity
+     */
+    @PostMapping
+    public ResponseEntity&lt;AttendanceSummaryDto&gt; save(@RequestBody AttendanceSummaryDto dto) {
+<span class="nc" id="L28">        AttendanceSummaryDto saved = attendanceSummaryService.saveSummary(dto);</span>
+<span class="nc" id="L29">        return ResponseEntity.ok(saved);</span>
+    }
+
+    /**
+     * Retrieves an attendance summary by its unique identifier.
+     *
+     * @param id the unique identifier of the attendance summary
+     * @return a ResponseEntity containing the requested AttendanceSummaryDto
+     */
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceSummaryDto&gt; getById(@PathVariable Long id) {
+<span class="nc" id="L40">        AttendanceSummaryDto dto = attendanceSummaryService.getSummaryById(id);</span>
+<span class="nc" id="L41">        return ResponseEntity.ok(dto);</span>
+    }
+
+    /**
+     * Retrieves all attendance summaries.
+     *
+     * @return a ResponseEntity containing a list of all AttendanceSummaryDto objects
+     */
+    @GetMapping
+    public ResponseEntity&lt;List&lt;AttendanceSummaryDto&gt;&gt; getAll() {
+<span class="nc" id="L51">        List&lt;AttendanceSummaryDto&gt; list = attendanceSummaryService.getAllSummaries();</span>
+<span class="nc" id="L52">        return ResponseEntity.ok(list);</span>
+    }
+
+    /****
+     * Updates an existing attendance summary identified by its ID.
+     *
+     * @param id the ID of the attendance summary to update
+     * @param dto the updated attendance summary data
+     * @return the updated attendance summary wrapped in an HTTP 200 OK response
+     */
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceSummaryDto&gt; update(
+            @PathVariable Long id,
+            @RequestBody AttendanceSummaryDto dto
+    ) {
+<span class="nc" id="L67">        AttendanceSummaryDto updated = attendanceSummaryService.updateSummary(id, dto);</span>
+<span class="nc" id="L68">        return ResponseEntity.ok(updated);</span>
+    }
+
+    /****
+     * Retrieves the monthly attendance report for a specific user and month.
+     *
+     * @param userId the ID of the user whose attendance report is requested
+     * @param month the month for which the report is generated, formatted as &quot;yyyy-MM&quot;
+     * @return the monthly attendance report for the specified user and month
+     */
+    @GetMapping(&quot;/monthly&quot;)
+    public ResponseEntity&lt;MonthlyAttendanceReportDto&gt; getMonthlyReport(
+            @RequestParam Long userId,
+            @RequestParam String month
+    ) {
+<span class="nc" id="L83">        MonthlyAttendanceReportDto report = attendanceSummaryService.getMonthlyAttendanceReport(userId, month);</span>
+<span class="nc" id="L84">        return ResponseEntity.ok(report);</span>
+    }
+
+    /**
+     * Handles ResourceNotFoundException by returning a 404 Not Found response with the exception message as the response body.
+     *
+     * @param ex the ResourceNotFoundException thrown during request processing
+     * @return a ResponseEntity containing the exception message and HTTP 404 status
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity&lt;String&gt; handleNotFound(ResourceNotFoundException ex) {
+<span class="nc" id="L95">        return ResponseEntity.status(404).body(ex.getMessage());</span>
+    }
+
+    /**
+     * Handles uncaught exceptions by returning a 500 Internal Server Error response with a generic error message.
+     *
+     * @param ex the exception that was thrown
+     * @return a ResponseEntity containing the error message and HTTP 500 status
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;String&gt; handleGenericException(Exception ex) {
+<span class="nc" id="L106">        return ResponseEntity.status(500).body(&quot;Something went wrong: &quot; + ex.getMessage());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

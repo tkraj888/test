@@ -4,32 +4,56 @@
     <meta charset="UTF-8">
     <title>Login - GTasterix</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 32px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            border-radius: 8px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        body {
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
-        }
-        .login-container {
-            background-color: white;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            width: 300px;
         }
         .login-container h2 {
             text-align: center;
             margin-bottom: 20px;
+            letter-spacing: 1px;
+            font-weight: 500;
         }
-        input[type="text"], input[type="password"] {
+        .input-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        input[type="email"], input[type="password"], input[type="number"], select {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
+            padding: 10px 8px;
+            margin: 6px 0 0 0;
+            border: 1px solid #bbb;
             border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
         }
         button {
             width: 100%;
@@ -37,30 +61,38 @@
             background-color: #007bff;
             color: white;
             border: none;
+            font-size: 16px;
             border-radius: 4px;
             cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
         }
         button:hover {
             background-color: #0056b3;
         }
+        .logout-btn {
+            background-color: #d32f2f;
+        }
         #download-container {
             display: none;
             flex-direction: column;
-        }
-        select, #download-container input[type="number"] {
-            padding: 8px;
-            margin: 10px 0;
         }
     </style>
 </head>
 <body>
 <div class="login-container">
     <h2>Login</h2>
-    <div id="login-form">
-        <input type="text" id="username" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
-    </div>
+    <form id="login-form" onsubmit="login(event)">
+        <div class="input-group">
+            <label for="username">Email</label>
+            <input type="email" id="username" required placeholder="Enter your email">
+        </div>
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required placeholder="Enter your password">
+        </div>
+        <button type="submit">Login</button>
+    </form>
 
     <div id="download-container">
         <label for="month">Select Month:</label>
@@ -75,12 +107,13 @@
         <input type="number" id="year" value="2025" min="2000">
 
         <button onclick="downloadPayslip()">Download Payslip</button>
-        <button onclick="logout()" style="background-color:red; margin-top:10px;">Logout</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 </div>
 
 <script>
-    function login() {
+    function login(event) {
+        event.preventDefault();
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
@@ -96,8 +129,10 @@
                 document.getElementById("login-form").style.display = "none";
                 document.getElementById("download-container").style.display = "flex";
             } else {
-                alert("Login failed");
+                alert("Login failed. Please check your credentials or try again.");
             }
+        }).catch(() => {
+            alert("Login error. Please ensure the backend is running and reachable.");
         });
     }
 
@@ -105,14 +140,19 @@
         const userId = localStorage.getItem("userId");
         const month = document.getElementById("month").value;
         const year = document.getElementById("year").value;
-
+        if (!userId) {
+            alert("Please log in first.");
+            return;
+        }
         const url = `http://localhost:8082/api/v1/attendance/pdf?userId=${userId}&month=${month}&year=${year}`;
         window.open(url, '_blank');
     }
 
     function logout() {
         localStorage.removeItem("userId");
-        location.reload();
+        document.getElementById("download-container").style.display = "none";
+        document.getElementById("login-form").style.display = "block";
+        document.getElementById("login-form").reset();
     }
 
     window.onload = function () {

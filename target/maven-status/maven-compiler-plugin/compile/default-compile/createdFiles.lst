@@ -1,11 +1,13 @@
 com\spring\jwt\jwt\impl\JwtServiceImpl.class
 com\spring\jwt\utils\BaseResponseDTO.class
+com\spring\jwt\Attandance\serviceImpl\AttendanceSummaryServiceImpl.class
 com\spring\jwt\repository\EmployeeRepository.class
 com\spring\jwt\entity\enum01\ClassPatter.class
 com\spring\jwt\Exam\Dto\PaperWithQuestionsDTOnn$PaperWithQuestionsDTOnnBuilder.class
 com\spring\jwt\Question\QuestionUpdateDTO.class
 com\spring\jwt\exception\GlobalException.class
 com\spring\jwt\jwt\JwtService.class
+com\spring\jwt\Attandance\repo\AttendanceSummaryRepository.class
 com\spring\jwt\Exam\Dto\PaperWithQuestionsDTOnn.class
 com\spring\jwt\Exam\controller\PaperController.class
 com\spring\jwt\Exam\Dto\QuestionNoAnswerDTO.class
@@ -18,6 +20,7 @@ com\spring\jwt\Exam\service\ExamLinkService.class
 com\spring\jwt\utils\EmailVerificationService\EmailVerificationController.class
 com\spring\jwt\utils\EmailVerificationService\EmailUtils\VerifyOtpDTO.class
 com\spring\jwt\Question\QuestionDtoWithoutAns.class
+com\spring\jwt\Attandance\Dto\MonthlyAttendanceReportDto.class
 com\spring\jwt\config\filter\XssFilter$XssRequestWrapper$1.class
 com\spring\jwt\Exam\controller\ExamLinkController.class
 com\spring\jwt\Exam\Dto\PaperWithQuestionsDTO.class
@@ -34,6 +37,7 @@ com\spring\jwt\Exam\Dto\CreateExamLinkResponse$CreateExamLinkResponseBuilder.cla
 com\spring\jwt\Exam\Dto\StudentClassResultDTO.class
 com\spring\jwt\config\filter\JwtRefreshTokenFilter$RefreshTokenAuthentication.class
 com\spring\jwt\service\impl\UserServiceImpl.class
+com\spring\jwt\Attandance\Dto\AttendanceSummaryDailyDto.class
 com\spring\jwt\PaperPattern\PaperPatternRepository.class
 com\spring\jwt\config\filter\SecurityHeadersFilter.class
 com\spring\jwt\utils\ApiResponse.class
@@ -54,6 +58,7 @@ com\spring\jwt\config\filter\CustomAuthenticationProvider.class
 com\spring\jwt\Exam\Dto\CreateExamLinkResponse.class
 com\spring\jwt\service\security\UserDetailsCustom.class
 com\spring\jwt\utils\EmailVerificationService\EmailUtils\VerifyOtpRequest.class
+com\spring\jwt\Attandance\repo\AttendanceEmpRepository.class
 com\spring\jwt\dto\PageResponseDto.class
 com\spring\jwt\Exam\repository\NegativeMarksRepository.class
 com\spring\jwt\exception\NotesNotCreatedException.class
@@ -91,6 +96,8 @@ com\spring\jwt\Exam\Dto\UserAnswerDTO.class
 com\spring\jwt\Exam\Dto\PaperQuestionDTO.class
 com\spring\jwt\dto\LoginRequest.class
 com\spring\jwt\Exam\Dto\QuestionNoAnswerDTO$QuestionNoAnswerDTOBuilder.class
+com\spring\jwt\Attandance\Dto\AttendanceEmpCreateDto.class
+com\spring\jwt\Attandance\Dto\AttendanceSummaryDto.class
 com\spring\jwt\Exam\Dto\SessionQuestionAnswerDTO.class
 com\spring\jwt\Exam\Dto\ExamSessionDTO.class
 com\spring\jwt\Exam\serviceImpl\ExcelExportUtil.class
@@ -121,6 +128,7 @@ com\spring\jwt\Exam\util\DateFormatTest.class
 com\spring\jwt\PaperPattern\PaperPatternService.class
 com\spring\jwt\repository\TeacherRepository.class
 com\spring\jwt\exception\TeacherNotFoundException.class
+com\spring\jwt\Attandance\controller\AttendanceEmpController.class
 com\spring\jwt\Exam\serviceImpl\ExamResultServiceImpl.class
 com\spring\jwt\Exam\Dto\PaperDTO$PaperDTOBuilder.class
 com\spring\jwt\dto\EmailVerificationMapper.class
@@ -129,6 +137,7 @@ com\spring\jwt\exception\EmailNotVerifiedException.class
 com\spring\jwt\config\filter\SqlInjectionFilter.class
 com\spring\jwt\Question\QuestionUpdateDTO$QuestionUpdateDTOBuilder.class
 com\spring\jwt\dto\ResponseAllUsersDto.class
+com\spring\jwt\Attandance\serviceImpl\AttendanceEmpServiceImpl.class
 com\spring\jwt\Exam\Dto\PaperDTO1$PaperDTO1Builder.class
 com\spring\jwt\exception\EmptyFieldException.class
 com\spring\jwt\controller\EmployeeController.class
@@ -139,6 +148,7 @@ com\spring\jwt\JwtWithSpringSecurityApplication.class
 com\spring\jwt\utils\EmailVerificationService\EmailVerification.class
 com\spring\jwt\Exam\repository\DescriptiveAnsRepository.class
 com\spring\jwt\repository\AttendanceRepository.class
+com\spring\jwt\Attandance\Service\AttendanceSummaryService.class
 com\spring\jwt\config\filter\RateLimitingFilter.class
 com\spring\jwt\exception\CustomAccessDeniedHandler.class
 com\spring\jwt\config\SslConfig.class
@@ -160,6 +170,8 @@ com\spring\jwt\Exam\entity\PaperQuestion.class
 com\spring\jwt\service\impl\EmployeeServiceImpl.class
 com\spring\jwt\config\SchedulingConfig.class
 com\spring\jwt\service\EmployeeService.class
+com\spring\jwt\Attandance\Dto\AttendanceEmpDto.class
+com\spring\jwt\Attandance\Service\AttendanceEmpService.class
 com\spring\jwt\entity\Teacher.class
 com\spring\jwt\jwt\TokenBlacklistService$TokenInfo.class
 com\spring\jwt\Exam\repository\ExamResultRepository.class
@@ -176,6 +188,7 @@ com\spring\jwt\Exam\service\PaperService.class
 com\spring\jwt\utils\KeystoreInitializer.class
 com\spring\jwt\Exam\Dto\PaperWithQuestionsAndAnswersDTO.class
 com\spring\jwt\jwt\TokenBlacklistService.class
+com\spring\jwt\Attandance\controller\AttendanceSummaryController.class
 com\spring\jwt\entity\enum01\EventType.class
 com\spring\jwt\Exam\Dto\PaperWithQuestionsWithAnsDTO$PaperWithQuestionsWithAnsDTOBuilder.class
 com\spring\jwt\Exam\entity\UserAnswer.class
@@ -188,6 +201,7 @@ com\spring\jwt\Question\QuestionController.class
 com\spring\jwt\Exam\service\ExamResultService.class
 com\spring\jwt\Exam\service\ExamSessionSchedulingService.class
 com\spring\jwt\service\impl\PayslipPdfServiceImpl.class
+com\spring\jwt\Attandance\ResourceAlreadyExistsException.class
 com\spring\jwt\dto\UserUpdateRequest.class
 com\spring\jwt\Question\QuestionRepository.class
 com\spring\jwt\utils\ApiResponse$ApiResponseBuilder.class
@@ -211,11 +225,13 @@ com\spring\jwt\PaperPattern\PaperPatternController.class
 com\spring\jwt\utils\EmailService.class
 com\spring\jwt\config\AppConfig.class
 com\spring\jwt\utils\EmailVerificationService\EmailUtils\EmailVerificationRequest.class
+com\spring\jwt\Attandance\entity\AttendanceEmp.class
 com\spring\jwt\PaperPattern\PaperPatternNotFoundException.class
 com\spring\jwt\entity\Employee.class
 com\spring\jwt\utils\CookieService.class
 com\spring\jwt\entity\enum01\QType.class
 com\spring\jwt\Exam\controller\ExamSessionController.class
+com\spring\jwt\Attandance\entity\AttendanceSummary.class
 com\spring\jwt\repository\PayslipRepository.class
 com\spring\jwt\utils\EmailVerificationService\EmailVerificationService.class
 com\spring\jwt\utils\LRIUtils.class
