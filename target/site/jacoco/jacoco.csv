@@ -56,6 +56,8 @@ JWT-with-Spring-Security,com.spring.jwt.entity,Student,425,0,78,0,12,0,63,0,24,0
 JWT-with-Spring-Security,com.spring.jwt.entity,Teacher,296,0,54,0,9,0,45,0,18,0
 JWT-with-Spring-Security,com.spring.jwt.entity,User,699,0,126,0,20,0,99,0,36,0
 JWT-with-Spring-Security,com.spring.jwt.entity,Question,872,0,158,0,23,0,125,0,46,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.entity,AttendanceSummary,275,0,54,0,7,0,44,0,17,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.entity,AttendanceEmp,315,0,62,0,8,0,50,0,19,0
 JWT-with-Spring-Security,com.spring.jwt.Exam.scheduler,ExamResultScheduler,100,0,6,0,23,0,6,0,3,0
 JWT-with-Spring-Security,com.spring.jwt.Exam.scheduler,DynamicExamResultScheduler,28,0,0,0,9,0,4,0,4,0
 JWT-with-Spring-Security,com.spring.jwt,JwtWithSpringSecurityApplication,40,0,0,0,13,0,2,0,2,0
@@ -70,7 +72,7 @@ JWT-with-Spring-Security,com.spring.jwt.exception,PageNotFoundException,4,0,0,0,
 JWT-with-Spring-Security,com.spring.jwt.exception,EmailNotVerifiedException,4,0,0,0,2,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.exception,ExamOnHolidayException,4,0,0,0,2,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.exception,InvalidOtpException,4,0,0,0,2,0,1,0,1,0
-JWT-with-Spring-Security,com.spring.jwt.exception,GlobalException,632,0,2,0,144,0,31,0,30,0
+JWT-with-Spring-Security,com.spring.jwt.exception,GlobalException,677,0,2,0,152,0,34,0,33,0
 JWT-with-Spring-Security,com.spring.jwt.exception,CustomAccessDeniedHandler,33,0,0,0,10,0,2,0,2,0
 JWT-with-Spring-Security,com.spring.jwt.exception,TeacherNotFoundException,4,0,0,0,2,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.exception,PaperFetchException,4,0,0,0,2,0,1,0,1,0
@@ -85,6 +87,11 @@ JWT-with-Spring-Security,com.spring.jwt.PaperPattern,PaperPatternDto,386,0,70,0,
 JWT-with-Spring-Security,com.spring.jwt.PaperPattern,PaperPatternController,104,0,0,0,27,0,7,0,7,0
 JWT-with-Spring-Security,com.spring.jwt.PaperPattern,PaperPatternNotFoundException,4,0,0,0,2,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.PaperPattern,PatternMapper,90,0,6,0,26,0,6,0,3,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.Dto,AttendanceEmpDto,315,0,62,0,8,0,50,0,19,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.Dto,AttendanceSummaryDailyDto,155,0,30,0,4,0,26,0,11,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.Dto,MonthlyAttendanceReportDto,256,0,38,0,8,0,38,0,19,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.Dto,AttendanceSummaryDto,275,0,54,0,7,0,44,0,17,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.Dto,AttendanceEmpCreateDto,115,0,22,0,3,0,20,0,9,0
 JWT-with-Spring-Security,com.spring.jwt.entity.enum01,EventType,39,0,0,0,7,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.entity.enum01,QType,21,0,0,0,4,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.entity.enum01,ClassPatter,45,0,0,0,8,0,1,0,1,0
@@ -115,6 +122,8 @@ JWT-with-Spring-Security,com.spring.jwt.controller,AuthController,161,0,4,0,37,0
 JWT-with-Spring-Security,com.spring.jwt.controller,EmployeeController,43,0,0,0,11,0,6,0,6,0
 JWT-with-Spring-Security,com.spring.jwt.controller,LoginPageController,5,0,0,0,2,0,2,0,2,0
 JWT-with-Spring-Security,com.spring.jwt.controller,UserController,453,0,48,0,105,0,37,0,13,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.controller,AttendanceSummaryController,60,0,0,0,13,0,8,0,8,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.controller,AttendanceEmpController,59,0,0,0,13,0,7,0,7,0
 JWT-with-Spring-Security,com.spring.jwt.Question,QuestionDtoWithoutAns,498,0,90,0,14,0,73,0,28,0
 JWT-with-Spring-Security,com.spring.jwt.Question,BulkQuestionDTO.BulkQuestionDTOBuilder,72,0,0,0,1,0,10,0,10,0
 JWT-with-Spring-Security,com.spring.jwt.Question,QuestionUpdateDTO,816,0,150,0,22,0,118,0,43,0
@@ -139,6 +148,8 @@ JWT-with-Spring-Security,com.spring.jwt.service.impl,UserServiceImpl,964,0,89,0,
 JWT-with-Spring-Security,com.spring.jwt.service.impl,AttendanceServiceImpl,293,0,2,0,63,0,12,0,11,0
 JWT-with-Spring-Security,com.spring.jwt.service.impl,EmployeeServiceImpl,141,0,2,0,33,0,11,0,10,0
 JWT-with-Spring-Security,com.spring.jwt.service.impl,PayslipPdfServiceImpl,570,0,0,0,100,0,5,0,5,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.serviceImpl,AttendanceEmpServiceImpl,551,0,58,0,109,0,42,0,12,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance.serviceImpl,AttendanceSummaryServiceImpl,216,0,12,0,55,0,17,0,10,0
 JWT-with-Spring-Security,com.spring.jwt.utils,HelperUtils,10,0,0,0,2,0,2,0,2,0
 JWT-with-Spring-Security,com.spring.jwt.utils,EncryptionMigrationUtil,114,0,18,0,26,0,13,0,4,0
 JWT-with-Spring-Security,com.spring.jwt.utils,ApiResponse,483,0,66,0,61,0,63,0,30,0
@@ -192,5 +203,6 @@ JWT-with-Spring-Security,com.spring.jwt.Exam.Dto,PaperWithQuestionsDTOnn.PaperWi
 JWT-with-Spring-Security,com.spring.jwt.Exam.Dto,PaperDTO1,558,0,102,0,16,0,82,0,31,0
 JWT-with-Spring-Security,com.spring.jwt.Exam.Dto,PaperWithQuestionsDTOnn,469,0,86,0,12,0,69,0,26,0
 JWT-with-Spring-Security,com.spring.jwt.jwt.impl,JwtServiceImpl,692,0,52,0,184,0,45,0,19,0
+JWT-with-Spring-Security,com.spring.jwt.Attandance,ResourceAlreadyExistsException,4,0,0,0,2,0,1,0,1,0
 JWT-with-Spring-Security,com.spring.jwt.Exam.util,DateTest,60,0,0,0,17,0,2,0,2,0
 JWT-with-Spring-Security,com.spring.jwt.Exam.util,DateFormatTest,60,0,0,0,17,0,2,0,2,0

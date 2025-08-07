@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttendanceEmpController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Attandance.controller</a> &gt; <span class="el_source">AttendanceEmpController.java</span></div><h1>AttendanceEmpController.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Attandance.controller;
+
+import com.spring.jwt.Attandance.Dto.AttendanceEmpCreateDto;
+import com.spring.jwt.Attandance.Dto.AttendanceEmpDto;
+import com.spring.jwt.Attandance.Service.AttendanceEmpService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/v1/attendance&quot;)
+<span class="nc" id="L16">@RequiredArgsConstructor</span>
+public class AttendanceEmpController {
+
+    private final AttendanceEmpService attendanceService;
+
+    /**
+     * Records a login or logout attendance entry for an employee.
+     *
+     * @param dto the attendance data to be saved
+     * @param type specifies whether the attendance is for &quot;login&quot; or &quot;logout&quot;
+     * @return the saved attendance entry wrapped in a ResponseEntity
+     */
+    @PostMapping(&quot;/mark&quot;)
+    public ResponseEntity&lt;AttendanceEmpCreateDto&gt; markAttendance(
+            @RequestBody AttendanceEmpCreateDto dto,
+            @RequestParam String type // login or logout
+    ) {
+<span class="nc" id="L33">        AttendanceEmpCreateDto attendanceEmpCreateDto = attendanceService.saveAttendance(dto, type);</span>
+<span class="nc" id="L34">        return ResponseEntity.ok(attendanceEmpCreateDto);</span>
+    }
+
+    /**
+     * Retrieves an employee attendance record by its unique ID.
+     *
+     * @param id the unique identifier of the attendance record
+     * @return a ResponseEntity containing the attendance record DTO
+     */
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceEmpDto&gt; getById(@PathVariable Long id) {
+<span class="nc" id="L45">        AttendanceEmpDto dto = attendanceService.getAttendanceById(id);</span>
+<span class="nc" id="L46">        return ResponseEntity.ok(dto);</span>
+    }
+
+    /**
+     * Retrieves all employee attendance records.
+     *
+     * @return a ResponseEntity containing a list of all AttendanceEmpDto objects
+     */
+    @GetMapping
+    public ResponseEntity&lt;List&lt;AttendanceEmpDto&gt;&gt; getAll() {
+<span class="nc" id="L56">        List&lt;AttendanceEmpDto&gt; list = attendanceService.getAllAttendance();</span>
+<span class="nc" id="L57">        return ResponseEntity.ok(list);</span>
+    }
+
+    /**
+     * Updates an existing attendance record by its ID.
+     *
+     * @param id the ID of the attendance record to update
+     * @param dto the updated attendance data
+     * @return the updated attendance record wrapped in a ResponseEntity
+     */
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;AttendanceEmpDto&gt; updateAttendance(
+            @PathVariable Long id,
+            @RequestBody AttendanceEmpDto dto
+    ) {
+<span class="nc" id="L72">        AttendanceEmpDto updated = attendanceService.updateAttendance(id, dto);</span>
+<span class="nc" id="L73">        return ResponseEntity.ok(updated);</span>
+    }
+
+    /**
+     * Retrieves attendance records for a specific user within a given date range.
+     *
+     * @param userId     the ID of the user whose attendance records are requested
+     * @param startDate  the start date of the range (inclusive), in ISO format
+     * @param endDate    the end date of the range (inclusive), in ISO format
+     * @return a ResponseEntity containing a list of attendance records for the user within the specified date range
+     */
+    @GetMapping(&quot;/user/{userId}/range&quot;)
+    public ResponseEntity&lt;List&lt;AttendanceEmpDto&gt;&gt; getByDateRange(
+            @PathVariable Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+<span class="nc" id="L90">        List&lt;AttendanceEmpDto&gt; list = attendanceService.getAttendanceByUserIdAndDateRange(userId, startDate, endDate);</span>
+<span class="nc" id="L91">        return ResponseEntity.ok(list);</span>
+    }
+
+    /**
+     * Retrieves attendance records for a specific user filtered by month and year.
+     *
+     * @param userId the ID of the user whose attendance records are to be retrieved
+     * @param month the month (1-12) for which attendance records are requested
+     * @param year the year for which attendance records are requested
+     * @return a ResponseEntity containing a list of AttendanceEmpDto objects for the specified user, month, and year
+     */
+    @GetMapping(&quot;/user/{userId}/month&quot;)
+    public ResponseEntity&lt;List&lt;AttendanceEmpDto&gt;&gt; getByMonth(
+            @PathVariable Long userId,
+            @RequestParam int month,
+            @RequestParam int year
+    ) {
+<span class="nc" id="L108">        List&lt;AttendanceEmpDto&gt; list = attendanceService.getAttendanceByUserIdAndMonth(userId, month, year);</span>
+<span class="nc" id="L109">        return ResponseEntity.ok(list);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

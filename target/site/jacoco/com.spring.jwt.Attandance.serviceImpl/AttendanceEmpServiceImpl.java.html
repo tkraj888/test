@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AttendanceEmpServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JWT-with-Spring-Security</a> &gt; <a href="index.source.html" class="el_package">com.spring.jwt.Attandance.serviceImpl</a> &gt; <span class="el_source">AttendanceEmpServiceImpl.java</span></div><h1>AttendanceEmpServiceImpl.java</h1><pre class="source lang-java linenums">package com.spring.jwt.Attandance.serviceImpl;
+
+import com.spring.jwt.Attandance.Dto.AttendanceEmpCreateDto;
+import com.spring.jwt.Attandance.Dto.AttendanceEmpDto;
+import com.spring.jwt.Attandance.ResourceAlreadyExistsException;
+import com.spring.jwt.Attandance.Service.AttendanceEmpService;
+import com.spring.jwt.Attandance.entity.AttendanceEmp;
+import com.spring.jwt.Attandance.entity.AttendanceSummary;
+import com.spring.jwt.Attandance.repo.AttendanceEmpRepository;
+import com.spring.jwt.Attandance.repo.AttendanceSummaryRepository;
+import com.spring.jwt.exception.ResourceNotFoundException;
+import com.spring.jwt.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+<span class="nc" id="L25">@RequiredArgsConstructor</span>
+public class AttendanceEmpServiceImpl implements AttendanceEmpService {
+
+    private final AttendanceEmpRepository repo;
+    private final UserRepository userRepository;
+    private final AttendanceSummaryRepository summaryRepo;
+
+    /**
+     * Saves an employee's attendance action for the current day, handling login, logout, or leave based on the specified type.
+     *
+     * Depending on the type parameter:
+     * &lt;ul&gt;
+     *   &lt;li&gt;&lt;b&gt;&quot;login&quot;&lt;/b&gt;: Marks the user's login time and work mode for today if not already marked.&lt;/li&gt;
+     *   &lt;li&gt;&lt;b&gt;&quot;logout&quot;&lt;/b&gt;: Marks the user's logout time, calculates working hours, and updates the attendance summary with status (&quot;Absent&quot;, &quot;Half-Day&quot;, or &quot;Present&quot;) based on hours worked. Requires a prior login.&lt;/li&gt;
+     *   &lt;li&gt;&lt;b&gt;&quot;leave&quot;&lt;/b&gt;: Marks the day as leave in the attendance summary if no attendance is already recorded for today.&lt;/li&gt;
+     * &lt;/ul&gt;
+     * Throws exceptions if the user does not exist, if attendance actions are duplicated, or if the type is invalid.
+     *
+     * @param dto  Data transfer object containing user ID and work mode.
+     * @param type The attendance action type: &quot;login&quot;, &quot;logout&quot;, or &quot;leave&quot;.
+     * @return A DTO containing the user ID and work mode of the saved attendance record.
+     */
+    @Override
+    @Transactional
+    public AttendanceEmpCreateDto saveAttendance(AttendanceEmpCreateDto dto, String type) {
+<span class="nc" id="L50">        Long userId = dto.getUserId();</span>
+<span class="nc" id="L51">        LocalDate date = LocalDate.now();</span>
+<span class="nc" id="L52">        LocalTime currentTime = LocalTime.now();</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (!userRepository.existsById(userId)) {</span>
+<span class="nc" id="L55">            throw new ResourceNotFoundException(&quot;User with ID %d does not exist.&quot;.formatted(userId));</span>
+        }
+
+<span class="nc" id="L58">        AttendanceEmp entity = repo.findByUserIdAndDate(userId, date).orElse(null);</span>
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">        switch (type.toLowerCase()) {</span>
+            case &quot;login&quot; -&gt; {
+<span class="nc bnc" id="L62" title="All 4 branches missed.">                if (entity != null &amp;&amp; entity.getLoginTime() != null) {</span>
+<span class="nc" id="L63">                    throw new ResourceAlreadyExistsException(&quot;Login already marked for today.&quot;);</span>
+                }
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                if (entity == null) {</span>
+<span class="nc" id="L67">                    entity = new AttendanceEmp();</span>
+<span class="nc" id="L68">                    entity.setUserId(userId);</span>
+<span class="nc" id="L69">                    entity.setDate(date);</span>
+                }
+
+<span class="nc" id="L72">                entity.setLoginTime(currentTime);</span>
+<span class="nc" id="L73">                entity.setWorkMode(dto.getWorkMode());</span>
+<span class="nc" id="L74">            }</span>
+
+            case &quot;logout&quot; -&gt; {
+<span class="nc bnc" id="L77" title="All 4 branches missed.">                if (entity == null || entity.getLoginTime() == null) {</span>
+<span class="nc" id="L78">                    throw new ResourceNotFoundException(&quot;Login not marked yet for today. Cannot logout.&quot;);</span>
+                }
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                if (entity.getLogoutTime() != null) {</span>
+<span class="nc" id="L81">                    throw new ResourceAlreadyExistsException(&quot;Logout already marked for today.&quot;);</span>
+                }
+
+<span class="nc" id="L84">                entity.setLogoutTime(currentTime);</span>
+<span class="nc" id="L85">                double workingHours = Duration.between(entity.getLoginTime(), currentTime).toMinutes() / 60.0;</span>
+<span class="nc" id="L86">                entity.setWorkingHours(workingHours);</span>
+
+<span class="nc" id="L88">                AttendanceSummary summary = summaryRepo.findByUserIdAndDate(userId, date)</span>
+<span class="nc" id="L89">                        .orElse(new AttendanceSummary());</span>
+
+<span class="nc" id="L91">                summary.setUserId(userId);</span>
+<span class="nc" id="L92">                summary.setDate(date);</span>
+<span class="nc" id="L93">                summary.setTotalWorkingHours(workingHours);</span>
+<span class="nc" id="L94">                summary.setWorkMode(entity.getWorkMode());</span>
+
+<span class="nc" id="L96">                summary.setAttendanceStatus(</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                        workingHours &lt; 4.0 ? &quot;Absent&quot; :</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                                workingHours &lt; 8.5 ? &quot;Half-Day&quot; : &quot;Present&quot;</span>
+                );
+
+<span class="nc" id="L101">                summaryRepo.save(summary);</span>
+<span class="nc" id="L102">            }</span>
+
+            case &quot;leave&quot; -&gt; {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                if (summaryRepo.findByUserIdAndDate(userId, date).isPresent()) {</span>
+<span class="nc" id="L106">                    throw new ResourceAlreadyExistsException(&quot;Attendance already marked for today.&quot;);</span>
+                }
+
+<span class="nc" id="L109">                AttendanceSummary summary = new AttendanceSummary();</span>
+<span class="nc" id="L110">                summary.setUserId(userId);</span>
+<span class="nc" id="L111">                summary.setDate(date);</span>
+<span class="nc" id="L112">                summary.setTotalWorkingHours(0.0);</span>
+<span class="nc" id="L113">                summary.setAttendanceStatus(&quot;Leave&quot;);</span>
+
+<span class="nc" id="L115">                summaryRepo.save(summary);</span>
+<span class="nc" id="L116">            }</span>
+
+<span class="nc" id="L118">            default -&gt; throw new IllegalArgumentException(&quot;Invalid type: must be 'login', 'logout', or 'leave'.&quot;);</span>
+        }
+
+<span class="nc" id="L121">        AttendanceEmp saved = repo.save(entity);</span>
+
+<span class="nc" id="L123">        AttendanceEmpCreateDto response = new AttendanceEmpCreateDto();</span>
+<span class="nc" id="L124">        response.setUserId(saved.getUserId());</span>
+<span class="nc" id="L125">        response.setWorkMode(saved.getWorkMode());</span>
+<span class="nc" id="L126">        return response;</span>
+    }
+
+    /**
+     * Retrieves an employee attendance record by its unique ID.
+     *
+     * @param id the unique identifier of the attendance record
+     * @return the attendance record as a DTO
+     * @throws ResourceNotFoundException if no attendance record exists with the specified ID
+     */
+    @Override
+    public AttendanceEmpDto getAttendanceById(Long id) {
+<span class="nc" id="L138">        AttendanceEmp entity = repo.findById(id)</span>
+<span class="nc" id="L139">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;AttendanceEmp not found with ID: &quot; + id));</span>
+<span class="nc" id="L140">        AttendanceEmpDto dto = new AttendanceEmpDto();</span>
+<span class="nc" id="L141">        BeanUtils.copyProperties(entity, dto);</span>
+<span class="nc" id="L142">        return dto;</span>
+    }
+
+    /**
+     * Retrieves all employee attendance records.
+     *
+     * @return a list of attendance DTOs representing all attendance entries in the system
+     */
+    @Override
+    public List&lt;AttendanceEmpDto&gt; getAllAttendance() {
+<span class="nc" id="L152">        return repo.findAll().stream().map(emp -&gt; {</span>
+<span class="nc" id="L153">            AttendanceEmpDto dto = new AttendanceEmpDto();</span>
+<span class="nc" id="L154">            BeanUtils.copyProperties(emp, dto);</span>
+<span class="nc" id="L155">            return dto;</span>
+<span class="nc" id="L156">        }).collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Updates an existing employee attendance record with new values and recalculates working hours and attendance status if applicable.
+     *
+     * If both login and logout times are present after the update, the method recalculates working hours and updates or creates the corresponding attendance summary with the appropriate attendance status.
+     *
+     * @param id the ID of the attendance record to update
+     * @param dto the data transfer object containing updated attendance information
+     * @return the updated attendance record as a DTO
+     * @throws ResourceNotFoundException if the attendance record with the specified ID does not exist
+     */
+    @Override
+    public AttendanceEmpDto updateAttendance(Long id, AttendanceEmpDto dto) {
+<span class="nc" id="L171">        AttendanceEmp entity = repo.findById(id)</span>
+<span class="nc" id="L172">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;AttendanceEmp not found with ID: &quot; + id));</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (dto.getLoginTime() != null) entity.setLoginTime(dto.getLoginTime());</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (dto.getLogoutTime() != null) entity.setLogoutTime(dto.getLogoutTime());</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (dto.getDate() != null) entity.setDate(dto.getDate());</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (dto.getWorkMode() != null) entity.setWorkMode(dto.getWorkMode());</span>
+
+<span class="nc bnc" id="L179" title="All 4 branches missed.">        if (entity.getLoginTime() != null &amp;&amp; entity.getLogoutTime() != null) {</span>
+<span class="nc" id="L180">            double workingHours = Duration.between(entity.getLoginTime(), entity.getLogoutTime()).toMinutes() / 60.0;</span>
+<span class="nc" id="L181">            entity.setWorkingHours(workingHours);</span>
+
+<span class="nc" id="L183">            AttendanceSummary summary = summaryRepo.findByUserIdAndDate(entity.getUserId(), entity.getDate())</span>
+<span class="nc" id="L184">                    .orElse(new AttendanceSummary());</span>
+
+<span class="nc" id="L186">            summary.setUserId(entity.getUserId());</span>
+<span class="nc" id="L187">            summary.setDate(entity.getDate());</span>
+<span class="nc" id="L188">            summary.setTotalWorkingHours(workingHours);</span>
+<span class="nc" id="L189">            summary.setWorkMode(entity.getWorkMode());</span>
+
+<span class="nc" id="L191">            summary.setAttendanceStatus(</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                    workingHours &lt; 4.0 ? &quot;Absent&quot; :</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                            workingHours &lt; 8.5 ? &quot;Half-Day&quot; : &quot;Present&quot;</span>
+            );
+
+<span class="nc" id="L196">            summaryRepo.save(summary);</span>
+        }
+
+<span class="nc" id="L199">        AttendanceEmp saved = repo.save(entity);</span>
+<span class="nc" id="L200">        AttendanceEmpDto response = new AttendanceEmpDto();</span>
+<span class="nc" id="L201">        BeanUtils.copyProperties(saved, response);</span>
+<span class="nc" id="L202">        return response;</span>
+    }
+
+    /**
+     * Retrieves attendance records for a specific user within a given date range.
+     *
+     * @param userId the ID of the user whose attendance records are to be retrieved
+     * @param startDate the start date of the range (inclusive)
+     * @param endDate the end date of the range (inclusive)
+     * @return a list of attendance DTOs for the specified user and date range
+     * @throws ResourceNotFoundException if the user does not exist or no attendance records are found in the range
+     * @throws IllegalArgumentException if the date range is invalid
+     */
+    @Override
+    public List&lt;AttendanceEmpDto&gt; getAttendanceByUserIdAndDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (!userRepository.existsById(userId)) {</span>
+<span class="nc" id="L218">            throw new ResourceNotFoundException(&quot;User with ID %d not found.&quot;.formatted(userId));</span>
+        }
+
+<span class="nc bnc" id="L221" title="All 6 branches missed.">        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {</span>
+<span class="nc" id="L222">            throw new IllegalArgumentException(&quot;Invalid date range provided.&quot;);</span>
+        }
+
+<span class="nc" id="L225">        List&lt;AttendanceEmp&gt; list = repo.findByUserIdAndDateBetween(userId, startDate, endDate);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        if (list.isEmpty()) {</span>
+<span class="nc" id="L227">            throw new ResourceNotFoundException(&quot;No attendance found for user ID %d in the given date range.&quot;.formatted(userId));</span>
+        }
+
+<span class="nc" id="L230">        return list.stream().map(emp -&gt; {</span>
+<span class="nc" id="L231">            AttendanceEmpDto dto = new AttendanceEmpDto();</span>
+<span class="nc" id="L232">            BeanUtils.copyProperties(emp, dto);</span>
+<span class="nc" id="L233">            return dto;</span>
+<span class="nc" id="L234">        }).collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Retrieves attendance records for a specific user within a given month and year.
+     *
+     * @param userId the ID of the user whose attendance records are to be retrieved
+     * @param month the month (1-12) for which attendance records are requested
+     * @param year the year for which attendance records are requested
+     * @return a list of attendance DTOs for the specified user and month
+     * @throws ResourceNotFoundException if the user does not exist or no attendance records are found for the given period
+     * @throws IllegalArgumentException if the month value is not between 1 and 12
+     */
+    @Override
+    public List&lt;AttendanceEmpDto&gt; getAttendanceByUserIdAndMonth(Long userId, int month, int year) {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (!userRepository.existsById(userId)) {</span>
+<span class="nc" id="L250">            throw new ResourceNotFoundException(&quot;User with ID %d not found.&quot;.formatted(userId));</span>
+        }
+
+<span class="nc bnc" id="L253" title="All 4 branches missed.">        if (month &lt; 1 || month &gt; 12) {</span>
+<span class="nc" id="L254">            throw new IllegalArgumentException(&quot;Invalid month: &quot; + month);</span>
+        }
+
+<span class="nc" id="L257">        LocalDate start = LocalDate.of(year, month, 1);</span>
+<span class="nc" id="L258">        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());</span>
+
+<span class="nc" id="L260">        List&lt;AttendanceEmp&gt; list = repo.findByUserIdAndDateBetween(userId, start, end);</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        if (list.isEmpty()) {</span>
+<span class="nc" id="L262">            throw new ResourceNotFoundException(&quot;No attendance found for user ID %d in %d/%d.&quot;.formatted(userId, month, year));</span>
+        }
+
+<span class="nc" id="L265">        return list.stream().map(emp -&gt; {</span>
+<span class="nc" id="L266">            AttendanceEmpDto dto = new AttendanceEmpDto();</span>
+<span class="nc" id="L267">            BeanUtils.copyProperties(emp, dto);</span>
+<span class="nc" id="L268">            return dto;</span>
+<span class="nc" id="L269">        }).collect(Collectors.toList());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -4,6 +4,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Question\QuestionMapper
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\OpenApiConfig.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\util\DateTest.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\controller\AuthController.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\serviceImpl\AttendanceEmpServiceImpl.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\service\ExamSessionSchedulingService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\UserProfileDTO.java
@@ -16,6 +17,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\filter\XssFilter
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\ExamTimeWindowException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\repository\AttendanceRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\TeacherNotFoundException.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\repo\AttendanceEmpRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\serviceImpl\ExamResultServiceImpl.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\util\DateFormatTest.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\service\impl\UserServiceImpl.java
@@ -35,6 +37,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\ExamPaperSumma
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\PaperWithQuestionsDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\NotesNotCreatedException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\PaperWithQuestionsDTOn.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Dto\MonthlyAttendanceReportDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\service\security\UserDetailsServiceCustom.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\OtpExpiredException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\UserAlreadyExistException.java
@@ -48,6 +51,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\service\PaperServi
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\CreateExamLinkRequest.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EncryptionUtil.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\PaperPattern\PaperPatternDto.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Dto\AttendanceSummaryDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\CookieService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\entity\PaperQuestion.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\SchedulingConfig.java
@@ -56,12 +60,14 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\ExamOnHoliday
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\PaperWithQuestionsWithAnsDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\service\ExamService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\repository\RoleRepository.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\ResourceAlreadyExistsException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\repository\NegativeMarksRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\PaperFetchException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\ResponseDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\repository\PaperRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailVerificationService\EmailVerificationService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailVerificationService\EmailUtils\VerifyOtpDTO.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\repo\AttendanceSummaryRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\StudentClassResultDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\serviceImpl\ExamServiceImpl.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\service\security\UserDetailsCustom.java
@@ -78,6 +84,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\SecurityAuditLogg
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\serviceImpl\ExamLinkServiceImpl.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\repository\ExamSessionRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\service\PayslipHtmlGenerator.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\controller\AttendanceSummaryController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\JwtWithSpringSecurityApplication.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\GenericResponseDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EncryptionMigrationUtil.java
@@ -93,12 +100,15 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\service\impl\PayslipPdf
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Question\QuestionRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\Role.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\enum01\ClassPatter.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Dto\AttendanceEmpCreateDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\controller\ExamResultController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\NegativeMarksDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\DataMaskingUtils.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\Question.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\entity\AttendanceEmp.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\controller\LoginPageController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\filter\JwtUsernamePasswordAuthenticationFilter.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\entity\AttendanceSummary.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\repository\PayslipRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\PaperPattern\PatternMapper.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\AttendanceDTO.java
@@ -137,6 +147,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\serviceImpl\ExcelE
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\filter\SqlInjectionFilter.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\PaperPattern\PaperPatternService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\Payslip.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Dto\AttendanceEmpDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\jwt\TokenBlacklistService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailVerificationService\EmailUtils\EmailVerificationDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\PaperWithQuestionsAndAnswersDTO.java
@@ -146,6 +157,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\SslConfig.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\scheduler\DynamicExamResultScheduler.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\entity\NegativeMarks.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\jwt\JwtService.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\serviceImpl\AttendanceSummaryServiceImpl.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\repository\DescriptiveAnsRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\controller\UserController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\PaperPattern\PaperPatternServiceImpl.java
@@ -153,6 +165,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\DecryptionRespons
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\exception\ResourceNotFoundException.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\ResetPassword.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\TeacherDTO.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\controller\AttendanceEmpController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Question\QuestionUpdateDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\ResponseAllUsersDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailVerificationService\EmailVerificationRepo.java
@@ -167,6 +180,7 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\jwt\impl\JwtServiceImpl
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\QuestionWithAnswerDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\controller\ExamLinkController.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\enum01\EventType.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Service\AttendanceSummaryService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\ErrorResponseDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\ExamResultDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\KeystoreInitializer.java
@@ -181,9 +195,11 @@ D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\dto\PageResponseDto.jav
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Question\BulkQuestionDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\entity\Paper.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\config\AppConfig.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Dto\AttendanceSummaryDailyDto.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\ApiResponse.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\repository\PaperQuestionRepository.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\PaperPattern\PaperPatternRepository.java
+D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Attandance\Service\AttendanceEmpService.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\Exam\Dto\UserAnswerDTO.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\utils\EmailVerificationService\OtpUtil.java
 D:\GT\KArtolAppTest\GT_Test\src\main\java\com\spring\jwt\entity\Attendance.java
