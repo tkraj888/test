@@ -398,340 +398,365 @@ import java.util.stream.Collectors;
     @Transactional
     public ResponseDto1&lt;Double&gt; submitExamAnswers(Integer sessionId, Long userId, List&lt;UserAnswerDTO&gt; answers) {
         try {
-<span class="nc" id="L401">            ExamSession session = examSessionRepository.findById(sessionId)</span>
-<span class="nc" id="L402">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Exam session not found with ID: &quot; + sessionId));</span>
+            // Fetch session, throw if not found
+<span class="nc" id="L402">            ExamSession session = examSessionRepository.findById(sessionId)</span>
+<span class="nc" id="L403">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Exam session not found with ID: &quot; + sessionId));</span>
 
-<span class="nc bnc" id="L404" title="All 2 branches missed.">            if (!session.getUser().getId().equals(userId)) {</span>
-<span class="nc" id="L405">                System.out.println(&quot;Warning: User ID &quot; + userId + &quot; is submitting for session owned by user &quot; + session.getUser().getId());</span>
+            // Prevent double submission
+<span class="nc bnc" id="L406" title="All 2 branches missed.">            if (session.getScore() != null) {</span>
+<span class="nc" id="L407">                return ResponseDto1.error(&quot;Exam submission error&quot;, &quot;Exam already submitted for this session.&quot;);</span>
             }
 
-<span class="nc" id="L408">            double score = 0;</span>
-<span class="nc" id="L409">            double negativeScore = 0.0;</span>
-<span class="nc" id="L410">            int negativeCount = 0;</span>
+            // Verify user ownership (log warning but continue)
+<span class="nc bnc" id="L411" title="All 2 branches missed.">            if (!session.getUser().getId().equals(userId)) {</span>
+<span class="nc" id="L412">                System.out.println(&quot;Warning: User ID &quot; + userId + &quot; is submitting for session owned by user &quot; + session.getUser().getId());</span>
+            }
 
-<span class="nc" id="L412">            List&lt;UserAnswer&gt; userAnswers = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L415">            Paper paper = session.getPaper();</span>
+<span class="nc" id="L416">            List&lt;Question&gt; allQuestions = paper.getPaperQuestions().stream()</span>
+<span class="nc" id="L417">                    .map(PaperQuestion::getQuestion)</span>
+<span class="nc" id="L418">                    .collect(Collectors.toList());</span>
+<span class="nc" id="L419">            int totalQuestions = allQuestions.size();</span>
 
-<span class="nc" id="L414">            Paper paper = session.getPaper();</span>
-<span class="nc bnc" id="L415" title="All 2 branches missed.">            Integer patternId = paper.getPaperPattern() != null ? paper.getPaperPattern().getPaperPatternId() : null;</span>
-
-<span class="nc bnc" id="L417" title="All 2 branches missed.">            PaperPattern pattern = patternId != null</span>
-<span class="nc" id="L418">                    ? paperPatternRepository.findById(patternId).orElse(null)</span>
-<span class="nc" id="L419">                    : null;</span>
-
-<span class="nc bnc" id="L421" title="All 2 branches missed.">            int negativeType = pattern != null ? pattern.getNegativeMarks() : 0;</span>
-<span class="nc bnc" id="L422" title="All 5 branches missed.">            double negativePerWrong = switch (negativeType) {</span>
-<span class="nc" id="L423">                case 1 -&gt; 0.25;</span>
-<span class="nc" id="L424">                case 2 -&gt; 0.50;</span>
-<span class="nc" id="L425">                case 3 -&gt; 0.75;</span>
-<span class="nc" id="L426">                case 4 -&gt; 1.0;</span>
-<span class="nc" id="L427">                default -&gt; 0.0;</span>
+            // Get negative marking info
+<span class="nc" id="L422">            int negativeType = Optional.ofNullable(paper.getPaperPattern())</span>
+<span class="nc" id="L423">                    .map(PaperPattern::getNegativeMarks)</span>
+<span class="nc" id="L424">                    .orElse(0);</span>
+<span class="nc bnc" id="L425" title="All 5 branches missed.">            double negativePerWrong = switch (negativeType) {</span>
+<span class="nc" id="L426">                case 1 -&gt; 0.25;</span>
+<span class="nc" id="L427">                case 2 -&gt; 0.50;</span>
+<span class="nc" id="L428">                case 3 -&gt; 0.75;</span>
+<span class="nc" id="L429">                case 4 -&gt; 1.0;</span>
+<span class="nc" id="L430">                default -&gt; 0.0;</span>
             };
 
-<span class="nc bnc" id="L430" title="All 2 branches missed.">            for (UserAnswerDTO dto : answers) {</span>
-<span class="nc" id="L431">                Question question = questionRepository.findById(dto.getQuestionId())</span>
-<span class="nc" id="L432">                        .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Question not found with ID: &quot; + dto.getQuestionId()));</span>
+            // Map questionId -&gt; UserAnswerDTO for O(1) lookup
+<span class="nc" id="L434">            Map&lt;Integer, UserAnswerDTO&gt; answerMap = answers.stream()</span>
+<span class="nc" id="L435">                    .collect(Collectors.toMap(UserAnswerDTO::getQuestionId, a -&gt; a));</span>
 
-<span class="nc" id="L434">                String selectedAns = dto.getSelectedOption();</span>
-<span class="nc" id="L435">                String correctAns = question.getAnswer();</span>
+<span class="nc" id="L437">            List&lt;UserAnswer&gt; userAnswers = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L438">            double score = 0;</span>
+<span class="nc" id="L439">            double negativeScore = 0;</span>
+<span class="nc" id="L440">            int negativeCount = 0;</span>
+<span class="nc" id="L441">            int right = 0;</span>
+<span class="nc" id="L442">            int wrong = 0;</span>
 
-<span class="nc" id="L437">                boolean isMultiOptions = question.isMultiOptions();</span>
-<span class="nc" id="L438">                double questionMarks = question.getMarks();</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">            for (Question question : allQuestions) {</span>
+<span class="nc" id="L445">                UserAnswerDTO dto = answerMap.get(question.getQuestionId());</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">                String selectedAns = (dto != null) ? dto.getSelectedOption() : null;</span>
+<span class="nc" id="L447">                String correctAns = question.getAnswer();</span>
+<span class="nc" id="L448">                boolean isMultiOptions = question.isMultiOptions();</span>
+<span class="nc" id="L449">                double marks = question.getMarks();</span>
+<span class="nc bnc" id="L450" title="All 4 branches missed.">                boolean attempted = selectedAns != null &amp;&amp; !selectedAns.trim().isEmpty();</span>
+<span class="nc" id="L451">                boolean isCorrect = false;</span>
 
-<span class="nc bnc" id="L440" title="All 2 branches missed.">                if (question.isDescriptive()) {</span>
-                    // Save descriptive answer
-<span class="nc" id="L442">                    DescriptiveAns da = new DescriptiveAns();</span>
-<span class="nc" id="L443">                    da.setQuestionId(question.getQuestionId());</span>
-<span class="nc" id="L444">                    da.setPaperId(paper.getPaperId());</span>
-<span class="nc" id="L445">                    da.setUserId(userId.intValue());</span>
-<span class="nc" id="L446">                    da.setAns(selectedAns);</span>
-<span class="nc" id="L447">                    descriptiveAnsRepository.save(da);</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">                if (question.isDescriptive()) {</span>
+                    // Save descriptive answers
+<span class="nc" id="L455">                    DescriptiveAns da = new DescriptiveAns();</span>
+<span class="nc" id="L456">                    da.setQuestionId(question.getQuestionId());</span>
+<span class="nc" id="L457">                    da.setPaperId(paper.getPaperId());</span>
+<span class="nc" id="L458">                    da.setUserId(userId.intValue());</span>
+<span class="nc" id="L459">                    da.setAns(selectedAns);</span>
+<span class="nc" id="L460">                    descriptiveAnsRepository.save(da);</span>
 
-                    // Check correctness and apply marking logic
-<span class="nc bnc" id="L450" title="All 4 branches missed.">                    if (correctAns != null &amp;&amp; selectedAns != null) {</span>
-<span class="nc" id="L451">                        boolean isCorrect = correctAns.trim().equalsIgnoreCase(selectedAns.trim());</span>
-
-<span class="nc bnc" id="L453" title="All 2 branches missed.">                        if (isCorrect) {</span>
-<span class="nc" id="L454">                            score += questionMarks;</span>
+<span class="nc bnc" id="L462" title="All 4 branches missed.">                    if (attempted &amp;&amp; correctAns != null) {</span>
+<span class="nc" id="L463">                        isCorrect = correctAns.trim().equalsIgnoreCase(selectedAns.trim());</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">                        if (isCorrect) {</span>
+<span class="nc" id="L465">                            score += marks;</span>
                         } else {
-<span class="nc" id="L456">                            negativeCount++;</span>
-<span class="nc" id="L457">                            double questionNegative = getNegativeMarks(paper, question.getQuestionId(), questionMarks, negativePerWrong);</span>
-<span class="nc" id="L458">                            negativeScore += questionNegative;</span>
+<span class="nc" id="L467">                            wrong++;</span>
+<span class="nc" id="L468">                            negativeCount++;</span>
+<span class="nc" id="L469">                            negativeScore += getNegativeMarks(paper, question.getQuestionId(), marks, negativePerWrong);</span>
                         }
                     }
+                    // Unattempted descriptive questions do not count as right or wrong
+<span class="nc" id="L473">                } else {</span>
+                    // Objective questions
+<span class="nc" id="L475">                    UserAnswer ua = new UserAnswer();</span>
+<span class="nc" id="L476">                    ua.setExamSession(session);</span>
+<span class="nc" id="L477">                    ua.setQuestion(question);</span>
+<span class="nc" id="L478">                    ua.setSelectedOption(selectedAns);</span>
+<span class="nc" id="L479">                    userAnswers.add(ua);</span>
 
-<span class="nc" id="L462">                } else {</span>
-                    // Save objective answer
-<span class="nc" id="L464">                    UserAnswer ua = new UserAnswer();</span>
-<span class="nc" id="L465">                    ua.setExamSession(session);</span>
-<span class="nc" id="L466">                    ua.setQuestion(question);</span>
-<span class="nc" id="L467">                    ua.setSelectedOption(selectedAns);</span>
-<span class="nc" id="L468">                    userAnswers.add(ua);</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">                    if (attempted) {</span>
+<span class="nc bnc" id="L482" title="All 4 branches missed.">                        if (isMultiOptions &amp;&amp; correctAns != null) {</span>
+<span class="nc" id="L483">                            Set&lt;Character&gt; correctSet = correctAns.chars().mapToObj(c -&gt; (char)c).collect(Collectors.toSet());</span>
+<span class="nc" id="L484">                            Set&lt;Character&gt; selectedSet = selectedAns.chars().mapToObj(c -&gt; (char)c).collect(Collectors.toSet());</span>
 
-<span class="nc bnc" id="L470" title="All 6 branches missed.">                    if (correctAns != null &amp;&amp; selectedAns != null &amp;&amp; isMultiOptions) {</span>
-<span class="nc" id="L471">                        Set&lt;Character&gt; correctSet = correctAns.chars().mapToObj(c -&gt; (char) c).collect(Collectors.toSet());</span>
-<span class="nc" id="L472">                        Set&lt;Character&gt; selectedSet = selectedAns.chars().mapToObj(c -&gt; (char) c).collect(Collectors.toSet());</span>
-
-<span class="nc bnc" id="L474" title="All 2 branches missed.">                        if (selectedSet.equals(correctSet)) {</span>
-<span class="nc" id="L475">                            score += questionMarks;</span>
-<span class="nc bnc" id="L476" title="All 2 branches missed.">                        } else if (correctSet.containsAll(selectedSet)) {</span>
-<span class="nc" id="L477">                            score += questionMarks / 2.0;</span>
-                        } else {
-<span class="nc" id="L479">                            negativeCount++;</span>
-<span class="nc" id="L480">                            double questionNegative = getNegativeMarks(paper, question.getQuestionId(), questionMarks, negativePerWrong);</span>
-<span class="nc" id="L481">                            negativeScore += questionNegative;</span>
-                        }
-
-<span class="nc" id="L484">                    } else {</span>
-<span class="nc bnc" id="L485" title="All 4 branches missed.">                        boolean isCorrect = correctAns != null &amp;&amp; correctAns.equalsIgnoreCase(selectedAns);</span>
-
-<span class="nc bnc" id="L487" title="All 2 branches missed.">                        if (isCorrect) {</span>
-<span class="nc" id="L488">                            score += questionMarks;</span>
-                        } else {
-<span class="nc" id="L490">                            negativeCount++;</span>
-<span class="nc" id="L491">                            double questionNegative = getNegativeMarks(paper, question.getQuestionId(), questionMarks, negativePerWrong);</span>
-<span class="nc" id="L492">                            negativeScore += questionNegative;</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">                            if (selectedSet.equals(correctSet)) {</span>
+<span class="nc" id="L487">                                isCorrect = true;</span>
+<span class="nc" id="L488">                                score += marks;</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">                            } else if (correctSet.containsAll(selectedSet)) {</span>
+<span class="nc" id="L490">                                score += marks / 2.0;</span>
+                                // partial credit, do not count as wrong
+                            } else {
+<span class="nc" id="L493">                                wrong++;</span>
+<span class="nc" id="L494">                                negativeCount++;</span>
+<span class="nc" id="L495">                                negativeScore += getNegativeMarks(paper, question.getQuestionId(), marks, negativePerWrong);</span>
+                            }
+<span class="nc" id="L497">                        } else {</span>
+                            // Single choice objective
+<span class="nc bnc" id="L499" title="All 4 branches missed.">                            if (correctAns != null &amp;&amp; correctAns.equalsIgnoreCase(selectedAns)) {</span>
+<span class="nc" id="L500">                                isCorrect = true;</span>
+<span class="nc" id="L501">                                score += marks;</span>
+                            } else {
+<span class="nc" id="L503">                                wrong++;</span>
+<span class="nc" id="L504">                                negativeCount++;</span>
+<span class="nc" id="L505">                                negativeScore += getNegativeMarks(paper, question.getQuestionId(), marks, negativePerWrong);</span>
+                            }
                         }
                     }
                 }
-<span class="nc" id="L496">            }</span>
 
-<span class="nc" id="L498">            double finalScore = score - negativeScore;</span>
-<span class="nc" id="L499">            session.setEndTime(LocalDateTime.now());</span>
-<span class="nc" id="L500">            session.setScore((double) Math.round(finalScore));</span>
-<span class="nc" id="L501">            session.setUserAnswers(userAnswers);</span>
-<span class="nc" id="L502">            session.setNegativeCount((double) negativeCount);</span>
-<span class="nc" id="L503">            session.setNegativeScore(negativeScore);</span>
-<span class="nc" id="L504">            session.setResultDate(paper.getResultDate());</span>
+<span class="nc bnc" id="L511" title="All 4 branches missed.">                if (attempted &amp;&amp; isCorrect) right++;</span>
+                // wrong incremented during scoring for objective questions above
+<span class="nc" id="L513">            }</span>
 
-<span class="nc" id="L506">            examSessionRepository.save(session);</span>
+<span class="nc" id="L515">            int attempted = right + wrong;</span>
+<span class="nc" id="L516">            int unsolved = totalQuestions - attempted;</span>
+<span class="nc" id="L517">            double finalScore = score - negativeScore;</span>
 
-<span class="nc" id="L508">            return ResponseDto1.success(</span>
+            // Save session results
+<span class="nc" id="L520">            session.setEndTime(LocalDateTime.now());</span>
+<span class="nc" id="L521">            session.setScore(Math.round(finalScore * 100.0) / 100.0);  // rounded to 2 decimals</span>
+<span class="nc" id="L522">            session.setUserAnswers(userAnswers);</span>
+<span class="nc" id="L523">            session.setNegativeCount((double) negativeCount);</span>
+<span class="nc" id="L524">            session.setNegativeScore(negativeScore);</span>
+<span class="nc" id="L525">            session.setResultDate(paper.getResultDate());</span>
+//            session.setRightAnswers(right);
+//            session.setWrongAnswers(wrong);
+//            session.setAttemptedQuestions(attempted);
+//            session.setTotalQuestions(totalQuestions);
+
+<span class="nc" id="L531">            examSessionRepository.save(session);</span>
+
+<span class="nc" id="L533">            return ResponseDto1.success(</span>
                     &quot;Exam submitted successfully&quot;,
-<span class="nc" id="L510">                    session.getPaper().getPaperId(),</span>
-<span class="nc" id="L511">                    session.getStartTime().toLocalDate(),</span>
-<span class="nc" id="L512">                    session.getEndTime().toLocalDate()</span>
+<span class="nc" id="L535">                    paper.getPaperId(),</span>
+<span class="nc" id="L536">                    session.getStartTime().toLocalDate(),</span>
+<span class="nc" id="L537">                    session.getEndTime().toLocalDate()</span>
             );
-<span class="nc" id="L514">        } catch (Exception e) {</span>
-<span class="nc" id="L515">            return ResponseDto1.error(&quot;Failed to submit exam&quot;, e.getMessage());</span>
+
+<span class="nc" id="L540">        } catch (Exception e) {</span>
+<span class="nc" id="L541">            return ResponseDto1.error(&quot;Failed to submit exam&quot;, e.getMessage());</span>
         }
     }
-
 
     @Override
     public List&lt;ExamResultDTO&gt; getResultsByUserId(Long userId) {
         // Check that the user exists
-<span class="nc" id="L523">        User user = userRepository.findById(userId)</span>
-<span class="nc" id="L524">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with ID: &quot; + userId));</span>
+<span class="nc" id="L548">        User user = userRepository.findById(userId)</span>
+<span class="nc" id="L549">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with ID: &quot; + userId));</span>
         try {
-<span class="nc" id="L526">            List&lt;ExamSession&gt; sessions = examSessionRepository.findByUser_Id(userId);</span>
+<span class="nc" id="L551">            List&lt;ExamSession&gt; sessions = examSessionRepository.findByUser_Id(userId);</span>
             // You can choose to throw if sessions.isEmpty(), but returning an empty list is RESTful
-<span class="nc" id="L528">            return sessions.stream().map(session -&gt; {</span>
-<span class="nc" id="L529">                ExamResultDTO dto = new ExamResultDTO();</span>
+<span class="nc" id="L553">            return sessions.stream().map(session -&gt; {</span>
+<span class="nc" id="L554">                ExamResultDTO dto = new ExamResultDTO();</span>
                 // Use resultId instead of sessionId
-<span class="nc" id="L531">                dto.setResultId(session.getSessionId());</span>
-<span class="nc" id="L532">                dto.setUserId(session.getUser().getId().intValue());</span>
-<span class="nc" id="L533">                dto.setPaperId(session.getPaper().getPaperId());</span>
-<span class="nc" id="L534">                dto.setPaperTitle(session.getPaper().getTitle());</span>
-<span class="nc" id="L535">                dto.setScore(session.getScore());</span>
-<span class="nc" id="L536">                dto.setStudentClass(session.getStudentClass());</span>
-<span class="nc" id="L537">                dto.setExamStartTime(session.getStartTime());</span>
-<span class="nc" id="L538">                dto.setExamEndTime(session.getEndTime());</span>
-<span class="nc" id="L539">                dto.setResultProcessedTime(LocalDateTime.now());</span>
-<span class="nc" id="L540">                dto.setNegativeCount(session.getNegativeCount());</span>
-<span class="nc" id="L541">                dto.setNegativeScore(session.getNegativeScore());</span>
+<span class="nc" id="L556">                dto.setResultId(session.getSessionId());</span>
+<span class="nc" id="L557">                dto.setUserId(session.getUser().getId().intValue());</span>
+<span class="nc" id="L558">                dto.setPaperId(session.getPaper().getPaperId());</span>
+<span class="nc" id="L559">                dto.setPaperTitle(session.getPaper().getTitle());</span>
+<span class="nc" id="L560">                dto.setScore(session.getScore());</span>
+<span class="nc" id="L561">                dto.setStudentClass(session.getStudentClass());</span>
+<span class="nc" id="L562">                dto.setExamStartTime(session.getStartTime());</span>
+<span class="nc" id="L563">                dto.setExamEndTime(session.getEndTime());</span>
+<span class="nc" id="L564">                dto.setResultProcessedTime(LocalDateTime.now());</span>
+<span class="nc" id="L565">                dto.setNegativeCount(session.getNegativeCount());</span>
+<span class="nc" id="L566">                dto.setNegativeScore(session.getNegativeScore());</span>
                 
                 // Calculate analytics data
-<span class="nc" id="L544">                int totalQuestions = session.getPaper().getPaperQuestions().size();</span>
-<span class="nc bnc" id="L545" title="All 2 branches missed.">                int answeredQuestions = session.getUserAnswers() != null ? session.getUserAnswers().size() : 0;</span>
-<span class="nc" id="L546">                int correctAnswers = 0;</span>
-<span class="nc" id="L547">                int incorrectAnswers = 0;</span>
+<span class="nc" id="L569">                int totalQuestions = session.getPaper().getPaperQuestions().size();</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">                int answeredQuestions = session.getUserAnswers() != null ? session.getUserAnswers().size() : 0;</span>
+<span class="nc" id="L571">                int correctAnswers = 0;</span>
+<span class="nc" id="L572">                int incorrectAnswers = 0;</span>
                 
-<span class="nc bnc" id="L549" title="All 2 branches missed.">                if (session.getUserAnswers() != null) {</span>
-<span class="nc bnc" id="L550" title="All 2 branches missed.">                    for (UserAnswer answer : session.getUserAnswers()) {</span>
-<span class="nc bnc" id="L551" title="All 2 branches missed.">                        if (answer.getSelectedOption() != null &amp;&amp; </span>
-<span class="nc bnc" id="L552" title="All 2 branches missed.">                            answer.getSelectedOption().equals(answer.getQuestion().getAnswer())) {</span>
-<span class="nc" id="L553">                            correctAnswers++;</span>
+<span class="nc bnc" id="L574" title="All 2 branches missed.">                if (session.getUserAnswers() != null) {</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">                    for (UserAnswer answer : session.getUserAnswers()) {</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">                        if (answer.getSelectedOption() != null &amp;&amp; </span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">                            answer.getSelectedOption().equals(answer.getQuestion().getAnswer())) {</span>
+<span class="nc" id="L578">                            correctAnswers++;</span>
                         } else {
-<span class="nc" id="L555">                            incorrectAnswers++;</span>
+<span class="nc" id="L580">                            incorrectAnswers++;</span>
                         }
-<span class="nc" id="L557">                    }</span>
+<span class="nc" id="L582">                    }</span>
                 }
                 
-<span class="nc" id="L560">                dto.setTotalQuestions(totalQuestions);</span>
-<span class="nc" id="L561">                dto.setCorrectAnswers(correctAnswers);</span>
-<span class="nc" id="L562">                dto.setIncorrectAnswers(incorrectAnswers);</span>
-<span class="nc" id="L563">                dto.setUnansweredQuestions(totalQuestions - answeredQuestions);</span>
-<span class="nc" id="L564">                dto.setOriginalSessionId(session.getSessionId());</span>
+<span class="nc" id="L585">                dto.setTotalQuestions(totalQuestions);</span>
+<span class="nc" id="L586">                dto.setCorrectAnswers(correctAnswers);</span>
+<span class="nc" id="L587">                dto.setIncorrectAnswers(incorrectAnswers);</span>
+<span class="nc" id="L588">                dto.setUnansweredQuestions(totalQuestions - answeredQuestions);</span>
+<span class="nc" id="L589">                dto.setOriginalSessionId(session.getSessionId());</span>
                 
-<span class="nc" id="L566">                return dto;</span>
-<span class="nc" id="L567">            }).collect(Collectors.toList());</span>
-<span class="nc" id="L568">        } catch (Exception ex) {</span>
-<span class="nc" id="L569">            throw new RuntimeException(&quot;Failed to fetch exam results for userId: &quot; + userId, ex);</span>
+<span class="nc" id="L591">                return dto;</span>
+<span class="nc" id="L592">            }).collect(Collectors.toList());</span>
+<span class="nc" id="L593">        } catch (Exception ex) {</span>
+<span class="nc" id="L594">            throw new RuntimeException(&quot;Failed to fetch exam results for userId: &quot; + userId, ex);</span>
         }
     }
 
     @Override
     public List&lt;SessionQuestionAnswerDTO&gt; getQuestionsAndAnswersBySessionId(Integer sessionId) {
-<span class="nc" id="L575">        ExamSession session = examSessionRepository.findById(sessionId)</span>
-<span class="nc" id="L576">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Session not found: &quot; + sessionId));</span>
+<span class="nc" id="L600">        ExamSession session = examSessionRepository.findById(sessionId)</span>
+<span class="nc" id="L601">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Session not found: &quot; + sessionId));</span>
 
-<span class="nc" id="L578">        return session.getUserAnswers().stream().map(userAnswer -&gt; {</span>
-<span class="nc" id="L579">            SessionQuestionAnswerDTO dto = new SessionQuestionAnswerDTO();</span>
-<span class="nc" id="L580">            dto.setQuestionId(Long.valueOf(userAnswer.getQuestion().getQuestionId()));</span>
-<span class="nc" id="L581">            dto.setQuestionText(userAnswer.getQuestion().getQuestionText());</span>
-<span class="nc" id="L582">            dto.setOptions(new String[]{</span>
-<span class="nc" id="L583">                    userAnswer.getQuestion().getOption1(),</span>
-<span class="nc" id="L584">                    userAnswer.getQuestion().getOption2(),</span>
-<span class="nc" id="L585">                    userAnswer.getQuestion().getOption3(),</span>
-<span class="nc" id="L586">                    userAnswer.getQuestion().getOption4()</span>
+<span class="nc" id="L603">        return session.getUserAnswers().stream().map(userAnswer -&gt; {</span>
+<span class="nc" id="L604">            SessionQuestionAnswerDTO dto = new SessionQuestionAnswerDTO();</span>
+<span class="nc" id="L605">            dto.setQuestionId(Long.valueOf(userAnswer.getQuestion().getQuestionId()));</span>
+<span class="nc" id="L606">            dto.setQuestionText(userAnswer.getQuestion().getQuestionText());</span>
+<span class="nc" id="L607">            dto.setOptions(new String[]{</span>
+<span class="nc" id="L608">                    userAnswer.getQuestion().getOption1(),</span>
+<span class="nc" id="L609">                    userAnswer.getQuestion().getOption2(),</span>
+<span class="nc" id="L610">                    userAnswer.getQuestion().getOption3(),</span>
+<span class="nc" id="L611">                    userAnswer.getQuestion().getOption4()</span>
             });
-<span class="nc" id="L588">            dto.setSubmittedAnswer(userAnswer.getSelectedOption());</span>
+<span class="nc" id="L613">            dto.setSubmittedAnswer(userAnswer.getSelectedOption());</span>
             // Uncomment below if you want to include the correct answer:
             // dto.setCorrectAnswer(userAnswer.getQuestion().getAnswer());
-<span class="nc" id="L591">            return dto;</span>
-<span class="nc" id="L592">        }).collect(Collectors.toList());</span>
+<span class="nc" id="L616">            return dto;</span>
+<span class="nc" id="L617">        }).collect(Collectors.toList());</span>
     }
 
     @Override
     public List&lt;StudentClassResultDTO&gt; getResultsGroupedByStudentClass() {
-<span class="nc" id="L597">        List&lt;ExamSession&gt; sessions = examSessionRepository.findAll();</span>
+<span class="nc" id="L622">        List&lt;ExamSession&gt; sessions = examSessionRepository.findAll();</span>
 
         // Group by studentClass
-<span class="nc" id="L600">        Map&lt;String, List&lt;ExamSession&gt;&gt; grouped = sessions.stream()</span>
-<span class="nc" id="L601">                .collect(Collectors.groupingBy(ExamSession::getStudentClass));</span>
+<span class="nc" id="L625">        Map&lt;String, List&lt;ExamSession&gt;&gt; grouped = sessions.stream()</span>
+<span class="nc" id="L626">                .collect(Collectors.groupingBy(ExamSession::getStudentClass));</span>
 
         // Map to DTO
-<span class="nc" id="L604">        return grouped.entrySet().stream().map(entry -&gt; {</span>
-<span class="nc" id="L605">            StudentClassResultDTO dto = new StudentClassResultDTO();</span>
-<span class="nc" id="L606">            dto.setStudentClass(entry.getKey());</span>
-<span class="nc" id="L607">            List&lt;ExamResultDTO&gt; resultDTOs = entry.getValue().stream().map(session -&gt; {</span>
-<span class="nc" id="L608">                ExamResultDTO res = new ExamResultDTO();</span>
+<span class="nc" id="L629">        return grouped.entrySet().stream().map(entry -&gt; {</span>
+<span class="nc" id="L630">            StudentClassResultDTO dto = new StudentClassResultDTO();</span>
+<span class="nc" id="L631">            dto.setStudentClass(entry.getKey());</span>
+<span class="nc" id="L632">            List&lt;ExamResultDTO&gt; resultDTOs = entry.getValue().stream().map(session -&gt; {</span>
+<span class="nc" id="L633">                ExamResultDTO res = new ExamResultDTO();</span>
                 // Use resultId instead of sessionId
-<span class="nc" id="L610">                res.setResultId(session.getSessionId());</span>
-<span class="nc" id="L611">                res.setUserId(session.getUser().getId().intValue());</span>
-<span class="nc" id="L612">                res.setPaperId(session.getPaper().getPaperId());</span>
-<span class="nc" id="L613">                res.setPaperTitle(session.getPaper().getTitle());</span>
-<span class="nc" id="L614">                res.setScore(session.getScore());</span>
-<span class="nc" id="L615">                res.setStudentClass(session.getStudentClass());</span>
-<span class="nc" id="L616">                res.setExamStartTime(session.getStartTime());</span>
-<span class="nc" id="L617">                res.setExamEndTime(session.getEndTime());</span>
-<span class="nc" id="L618">                res.setResultProcessedTime(LocalDateTime.now());</span>
-<span class="nc" id="L619">                res.setNegativeCount(session.getNegativeCount());</span>
-<span class="nc" id="L620">                res.setNegativeScore(session.getNegativeScore());</span>
+<span class="nc" id="L635">                res.setResultId(session.getSessionId());</span>
+<span class="nc" id="L636">                res.setUserId(session.getUser().getId().intValue());</span>
+<span class="nc" id="L637">                res.setPaperId(session.getPaper().getPaperId());</span>
+<span class="nc" id="L638">                res.setPaperTitle(session.getPaper().getTitle());</span>
+<span class="nc" id="L639">                res.setScore(session.getScore());</span>
+<span class="nc" id="L640">                res.setStudentClass(session.getStudentClass());</span>
+<span class="nc" id="L641">                res.setExamStartTime(session.getStartTime());</span>
+<span class="nc" id="L642">                res.setExamEndTime(session.getEndTime());</span>
+<span class="nc" id="L643">                res.setResultProcessedTime(LocalDateTime.now());</span>
+<span class="nc" id="L644">                res.setNegativeCount(session.getNegativeCount());</span>
+<span class="nc" id="L645">                res.setNegativeScore(session.getNegativeScore());</span>
                 
                 // Calculate analytics data
-<span class="nc" id="L623">                int totalQuestions = session.getPaper().getPaperQuestions().size();</span>
-<span class="nc bnc" id="L624" title="All 2 branches missed.">                int answeredQuestions = session.getUserAnswers() != null ? session.getUserAnswers().size() : 0;</span>
-<span class="nc" id="L625">                int correctAnswers = 0;</span>
-<span class="nc" id="L626">                int incorrectAnswers = 0;</span>
+<span class="nc" id="L648">                int totalQuestions = session.getPaper().getPaperQuestions().size();</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">                int answeredQuestions = session.getUserAnswers() != null ? session.getUserAnswers().size() : 0;</span>
+<span class="nc" id="L650">                int correctAnswers = 0;</span>
+<span class="nc" id="L651">                int incorrectAnswers = 0;</span>
                 
-<span class="nc bnc" id="L628" title="All 2 branches missed.">                if (session.getUserAnswers() != null) {</span>
-<span class="nc bnc" id="L629" title="All 2 branches missed.">                    for (UserAnswer answer : session.getUserAnswers()) {</span>
-<span class="nc bnc" id="L630" title="All 2 branches missed.">                        if (answer.getSelectedOption() != null &amp;&amp; </span>
-<span class="nc bnc" id="L631" title="All 2 branches missed.">                            answer.getSelectedOption().equals(answer.getQuestion().getAnswer())) {</span>
-<span class="nc" id="L632">                            correctAnswers++;</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">                if (session.getUserAnswers() != null) {</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">                    for (UserAnswer answer : session.getUserAnswers()) {</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">                        if (answer.getSelectedOption() != null &amp;&amp; </span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">                            answer.getSelectedOption().equals(answer.getQuestion().getAnswer())) {</span>
+<span class="nc" id="L657">                            correctAnswers++;</span>
                         } else {
-<span class="nc" id="L634">                            incorrectAnswers++;</span>
+<span class="nc" id="L659">                            incorrectAnswers++;</span>
                         }
-<span class="nc" id="L636">                    }</span>
+<span class="nc" id="L661">                    }</span>
                 }
                 
-<span class="nc" id="L639">                res.setTotalQuestions(totalQuestions);</span>
-<span class="nc" id="L640">                res.setCorrectAnswers(correctAnswers);</span>
-<span class="nc" id="L641">                res.setIncorrectAnswers(incorrectAnswers);</span>
-<span class="nc" id="L642">                res.setUnansweredQuestions(totalQuestions - answeredQuestions);</span>
-<span class="nc" id="L643">                res.setOriginalSessionId(session.getSessionId());</span>
+<span class="nc" id="L664">                res.setTotalQuestions(totalQuestions);</span>
+<span class="nc" id="L665">                res.setCorrectAnswers(correctAnswers);</span>
+<span class="nc" id="L666">                res.setIncorrectAnswers(incorrectAnswers);</span>
+<span class="nc" id="L667">                res.setUnansweredQuestions(totalQuestions - answeredQuestions);</span>
+<span class="nc" id="L668">                res.setOriginalSessionId(session.getSessionId());</span>
                 
-<span class="nc" id="L645">                return res;</span>
-<span class="nc" id="L646">            }).collect(Collectors.toList());</span>
-<span class="nc" id="L647">            dto.setResults(resultDTOs);</span>
-<span class="nc" id="L648">            return dto;</span>
-<span class="nc" id="L649">        }).collect(Collectors.toList());</span>
+<span class="nc" id="L670">                return res;</span>
+<span class="nc" id="L671">            }).collect(Collectors.toList());</span>
+<span class="nc" id="L672">            dto.setResults(resultDTOs);</span>
+<span class="nc" id="L673">            return dto;</span>
+<span class="nc" id="L674">        }).collect(Collectors.toList());</span>
     }
 
     @Override
     public List&lt;ExamSessionDTO&gt; getAllExamSessions() {
         try {
-<span class="nc" id="L655">            List&lt;ExamSession&gt; sessions = examSessionRepository.findAll();</span>
-<span class="nc" id="L656">            return sessions.stream()</span>
-<span class="nc" id="L657">                    .map(this::convertToDTO)</span>
-<span class="nc" id="L658">                    .collect(Collectors.toList());</span>
-<span class="nc" id="L659">        } catch (Exception ex) {</span>
+<span class="nc" id="L680">            List&lt;ExamSession&gt; sessions = examSessionRepository.findAll();</span>
+<span class="nc" id="L681">            return sessions.stream()</span>
+<span class="nc" id="L682">                    .map(this::convertToDTO)</span>
+<span class="nc" id="L683">                    .collect(Collectors.toList());</span>
+<span class="nc" id="L684">        } catch (Exception ex) {</span>
             // You could use your own custom exception type if you want
-<span class="nc" id="L661">            throw new RuntimeException(&quot;Failed to fetch all exam sessions&quot;, ex);</span>
+<span class="nc" id="L686">            throw new RuntimeException(&quot;Failed to fetch all exam sessions&quot;, ex);</span>
         }
     }
 
     @Override
     public ExamSessionDTO getLastExamSessionByUserId(Long userId) {
-<span class="nc" id="L667">        ExamSession session = examSessionRepository.findTopByUser_IdOrderBySessionIdDesc(userId)</span>
-<span class="nc" id="L668">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No exam session found for user: &quot; + userId));</span>
-<span class="nc" id="L669">        return convertToDTO(session);</span>
+<span class="nc" id="L692">        ExamSession session = examSessionRepository.findTopByUser_IdOrderBySessionIdDesc(userId)</span>
+<span class="nc" id="L693">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No exam session found for user: &quot; + userId));</span>
+<span class="nc" id="L694">        return convertToDTO(session);</span>
     }
 @Override
     public List&lt;ExamPaperSummaryDto&gt; getUniquePaperSummaries() {
-<span class="nc" id="L673">        List&lt;Integer&gt; paperIds = examSessionRepository.findDistinctPaperIds();</span>
-<span class="nc" id="L674">        List&lt;Paper&gt; papers = paperRepository.findAllById(paperIds);</span>
+<span class="nc" id="L698">        List&lt;Integer&gt; paperIds = examSessionRepository.findDistinctPaperIds();</span>
+<span class="nc" id="L699">        List&lt;Paper&gt; papers = paperRepository.findAllById(paperIds);</span>
 
-<span class="nc" id="L676">        List&lt;ExamPaperSummaryDto&gt; dtos = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L677" title="All 2 branches missed.">        for (Paper paper : papers) {</span>
+<span class="nc" id="L701">        List&lt;ExamPaperSummaryDto&gt; dtos = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">        for (Paper paper : papers) {</span>
             // Fetch all ExamSessions for this paper
-<span class="nc" id="L679">            List&lt;ExamSession&gt; sessions = examSessionRepository.findByPaper_PaperId(paper.getPaperId());</span>
+<span class="nc" id="L704">            List&lt;ExamSession&gt; sessions = examSessionRepository.findByPaper_PaperId(paper.getPaperId());</span>
 
             // Get startTime and resultDate from the first session, or use aggregation logic
 
 
-<span class="nc" id="L684">            dtos.add(new ExamPaperSummaryDto(</span>
-<span class="nc" id="L685">                    paper.getPaperId(),</span>
-<span class="nc" id="L686">                    paper.getTitle(),</span>
-<span class="nc" id="L687">                    paper.getStartTime(),</span>
-<span class="nc" id="L688">                    paper.getResultDate()</span>
+<span class="nc" id="L709">            dtos.add(new ExamPaperSummaryDto(</span>
+<span class="nc" id="L710">                    paper.getPaperId(),</span>
+<span class="nc" id="L711">                    paper.getTitle(),</span>
+<span class="nc" id="L712">                    paper.getStartTime(),</span>
+<span class="nc" id="L713">                    paper.getResultDate()</span>
 
             ));
-<span class="nc" id="L691">        }</span>
-<span class="nc" id="L692">        return dtos;</span>
+<span class="nc" id="L716">        }</span>
+<span class="nc" id="L717">        return dtos;</span>
     }
 
     @Override
     public List&lt;ExamSessionShowResultDto&gt; getSessionsByPaperId(Integer paperId) {
 
-<span class="nc" id="L698">        List&lt;ExamSession&gt; sessions = examSessionRepository.findByPaper_PaperId(paperId);</span>
-<span class="nc bnc" id="L699" title="All 4 branches missed.">        if (sessions == null || sessions.isEmpty()) {</span>
-<span class="nc" id="L700">            throw new ResourceNotFoundException(&quot;No ExamSession found for paperId: &quot; + paperId);</span>
+<span class="nc" id="L723">        List&lt;ExamSession&gt; sessions = examSessionRepository.findByPaper_PaperId(paperId);</span>
+<span class="nc bnc" id="L724" title="All 4 branches missed.">        if (sessions == null || sessions.isEmpty()) {</span>
+<span class="nc" id="L725">            throw new ResourceNotFoundException(&quot;No ExamSession found for paperId: &quot; + paperId);</span>
         }
 
         // Get the paper object once, since all sessions have the same paper
-<span class="nc" id="L704">        Paper paper = paperRepository.findById(paperId)</span>
-<span class="nc" id="L705">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper not found for paperId: &quot; + paperId));</span>
-<span class="nc" id="L706">        String paperTitle = paper.getTitle();</span>
+<span class="nc" id="L729">        Paper paper = paperRepository.findById(paperId)</span>
+<span class="nc" id="L730">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper not found for paperId: &quot; + paperId));</span>
+<span class="nc" id="L731">        String paperTitle = paper.getTitle();</span>
 
-<span class="nc" id="L708">        List&lt;ExamSessionShowResultDto&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L709" title="All 2 branches missed.">        for (ExamSession session : sessions) {</span>
-<span class="nc" id="L710">            User user = session.getUser();</span>
-<span class="nc" id="L711">            String studentName = &quot;&quot;;</span>
-<span class="nc bnc" id="L712" title="All 2 branches missed.">            if (user != null) {</span>
-<span class="nc bnc" id="L713" title="All 2 branches missed.">                studentName = (user.getFirstName() != null ? user.getFirstName() : &quot;&quot;) +</span>
+<span class="nc" id="L733">        List&lt;ExamSessionShowResultDto&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">        for (ExamSession session : sessions) {</span>
+<span class="nc" id="L735">            User user = session.getUser();</span>
+<span class="nc" id="L736">            String studentName = &quot;&quot;;</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc bnc" id="L738" title="All 2 branches missed.">                studentName = (user.getFirstName() != null ? user.getFirstName() : &quot;&quot;) +</span>
                         &quot; &quot; +
-<span class="nc bnc" id="L715" title="All 2 branches missed.">                        (user.getLastName() != null ? user.getLastName() : &quot;&quot;);</span>
-<span class="nc" id="L716">                studentName = studentName.trim();</span>
+<span class="nc bnc" id="L740" title="All 2 branches missed.">                        (user.getLastName() != null ? user.getLastName() : &quot;&quot;);</span>
+<span class="nc" id="L741">                studentName = studentName.trim();</span>
             }
 
-<span class="nc" id="L719">            result.add(new ExamSessionShowResultDto(</span>
-<span class="nc" id="L720">                    session.getSessionId(),</span>
-<span class="nc bnc" id="L721" title="All 2 branches missed.">                    user != null ? user.getId() : null,</span>
+<span class="nc" id="L744">            result.add(new ExamSessionShowResultDto(</span>
+<span class="nc" id="L745">                    session.getSessionId(),</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">                    user != null ? user.getId() : null,</span>
                     studentName,
-<span class="nc" id="L723">                    paper.getPaperId(),</span>
+<span class="nc" id="L748">                    paper.getPaperId(),</span>
                     paperTitle,
-<span class="nc" id="L725">                    session.getStudentClass(),</span>
-<span class="nc" id="L726">                    session.getStartTime(),</span>
-<span class="nc" id="L727">                    session.getEndTime(),</span>
-<span class="nc" id="L728">                    session.getResultDate(),</span>
-<span class="nc" id="L729">                    session.getScore(),</span>
-<span class="nc" id="L730">                    session.getNegativeCount(),</span>
-<span class="nc" id="L731">                    session.getNegativeScore()</span>
+<span class="nc" id="L750">                    session.getStudentClass(),</span>
+<span class="nc" id="L751">                    session.getStartTime(),</span>
+<span class="nc" id="L752">                    session.getEndTime(),</span>
+<span class="nc" id="L753">                    session.getResultDate(),</span>
+<span class="nc" id="L754">                    session.getScore(),</span>
+<span class="nc" id="L755">                    session.getNegativeCount(),</span>
+<span class="nc" id="L756">                    session.getNegativeScore()</span>
             ));
-<span class="nc" id="L733">        }</span>
-<span class="nc" id="L734">        return result;</span>
+<span class="nc" id="L758">        }</span>
+<span class="nc" id="L759">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
