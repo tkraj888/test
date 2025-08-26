@@ -70,7 +70,7 @@ import java.util.List;
     @Value(&quot;${app.url.frontend:http://localhost:5173}&quot;)
     private String frontendUrl;
 
-    @Value(&quot;#{'${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:5173/}'.split(',')}&quot;)
+    @Value(&quot;#{'${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:5173/,http://localhost:5174/}'.split(',')}&quot;)
     private List&lt;String&gt; allowedOrigins;
 
     @Bean
