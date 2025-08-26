@@ -52,7 +52,7 @@ public class ExamLinkServiceImpl implements ExamLinkService {
 
         return CreateExamLinkResponse.builder()
                 .uuid(uuid)
-                .examUrl("https://yourdomain.com/test/" + uuid)
+                .examUrl("https://gtasterixt.netlify.app/test/" + uuid)
                 .build();
     }
 
@@ -63,9 +63,9 @@ public class ExamLinkServiceImpl implements ExamLinkService {
             ExamAccessLink link = examAccessLinkRepository.findById(uuid)
                     .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired exam link"));
 
-//            if (link.isUsed()) {
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Test already done");
-//            }
+            if (link.isUsed()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Test already done");
+            }
 
             Paper paper = link.getPaper();
             if (paper == null) {
