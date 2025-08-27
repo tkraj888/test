@@ -16,7 +16,9 @@ public class ExamLinkController {
     private final ExamLinkService examLinkService;
 
     @PostMapping("/create")
+
     public ResponseEntity<CreateExamLinkResponse> createExamLink(@RequestBody CreateExamLinkRequest request) {
+        System.out.println("11");
         return ResponseEntity.ok(examLinkService.createExamLink(request));
     }
 

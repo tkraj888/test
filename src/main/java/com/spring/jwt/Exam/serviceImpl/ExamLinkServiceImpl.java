@@ -34,6 +34,7 @@ public class ExamLinkServiceImpl implements ExamLinkService {
 
     @Override
     public CreateExamLinkResponse createExamLink(CreateExamLinkRequest request) {
+        System.out.println("1");
         Paper paper = paperRepository.findById(request.getPaperId())
                 .orElseThrow(() -> new ResourceNotFoundException("Paper not found"));
 
@@ -60,6 +61,7 @@ public class ExamLinkServiceImpl implements ExamLinkService {
     @Transactional
     public ResponseEntity<?> useExamLink(String uuid) {
         try {
+            System.out.println("12");
             ExamAccessLink link = examAccessLinkRepository.findById(uuid)
                     .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired exam link"));
 
@@ -80,7 +82,19 @@ public class ExamLinkServiceImpl implements ExamLinkService {
                         .body("Exam not accessible at this time.");
             }
 
-            // Mark as used
+            // Check if an ExamSession for this link already exists
+//            boolean sessionExists = examSessionRepository.existsByPaperAndUserIdAndStudentClass(paper, link.getUserId(),link.getStudentClass());
+            boolean sessionExists = examSessionRepository.existsByPaperAndUserId(paper, link.getUserId());
+
+            if(sessionExists) {
+                // Double protection, never create more than one session per link
+                link.setUsed(true);
+                examAccessLinkRepository.save(link);
+                return ResponseEntity.status(HttpStatus.GONE)
+                        .body("Exam session already exists for this link.");
+            }
+
+            // Mark as used before creating session (to avoid race condition)
             link.setUsed(true);
             examAccessLinkRepository.save(link);
 
@@ -104,11 +118,12 @@ public class ExamLinkServiceImpl implements ExamLinkService {
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace(); // Logs to console or server log
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Unexpected error: " + e.getMessage());
         }
     }
+
 
 
     private PaperWithQuestionsDTOn buildExamDTO(ExamSession session) {
