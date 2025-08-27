@@ -2,6 +2,7 @@ package com.spring.jwt.Exam.repository;
 
 import com.spring.jwt.Exam.Dto.ExamPaperSummaryDto;
 import com.spring.jwt.Exam.entity.ExamSession;
+import com.spring.jwt.Exam.entity.Paper;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -64,4 +65,5 @@ public interface ExamSessionRepository extends JpaRepository<ExamSession, Intege
 
 
 
+    boolean existsByPaperAndUserId(Paper paper, Long userId);
 }
