@@ -107,7 +107,7 @@ public class ExamLinkServiceImpl implements ExamLinkService {
             session.setPaper(paper);
             session.setStudentClass(link.getStudentClass());
             session.setStartTime(now);
-            session.setScore(0.0);
+//            session.setScore(0.0);
             session.setUserAnswers(new ArrayList<>());
 
             examSessionRepository.save(session);
