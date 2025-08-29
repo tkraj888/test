@@ -29,6 +29,15 @@ public class PaperController {
 
 
 
+    /**
+     * Creates a new paper from the provided PaperDTO.
+     *
+     * If the request's `paperPatternId` is null, it is set to 2 before creation.
+     *
+     * @param paperDTO the paper details to create (if `paperPatternId` is null it defaults to 2)
+     * @return a ResponseEntity containing a ResponseDto with the created PaperDTO on success,
+     *         or a ResponseDto with an error message and HTTP 400 status on failure
+     */
     @Operation(
             summary = "Create a new paper",
             description = "Creates a new paper with the given details"
@@ -55,6 +64,15 @@ public class PaperController {
 
 
 
+    /**
+     * Retrieve a paper by its unique identifier.
+     *
+     * Returns HTTP 200 with a PaperDTO1 when found, 404 when no paper exists for the given id,
+     * and 500 for unexpected server errors.
+     *
+     * @param id the paper's unique identifier
+     * @return a ResponseEntity containing a PaperDTO1 on success or an error message with appropriate HTTP status
+     */
     @Operation(
             summary = "Get Paper by ID",
             description = "Retrieves a paper by its unique identifier"
