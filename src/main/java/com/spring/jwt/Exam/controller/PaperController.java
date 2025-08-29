@@ -36,7 +36,13 @@ public class PaperController {
     @PostMapping("/add")
     public ResponseEntity<ResponseDto<PaperDTO>> createPaper(@RequestBody PaperDTO paperDTO) {
         try {
+            // If paperPatternId is null, set default value = 2
+            if (paperDTO.getPaperPatternId() == null) {
+                paperDTO.setPaperPatternId(2);
+            }
+
             PaperDTO paper = paperService.createPaper(paperDTO);
+
             return ResponseEntity.ok(
                     ResponseDto.success("Paper created successfully", paper)
             );
@@ -46,6 +52,7 @@ public class PaperController {
             );
         }
     }
+
 
 
     @Operation(
