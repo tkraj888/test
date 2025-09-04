@@ -21,5 +21,6 @@ public class PaperWithQuestionsDTOn {
     private Boolean isLive;
     private String studentClass;
     private Integer paperPatternId;
+    private Integer userId;
     private List<QuestionNoAnswerDTO> questions;
 }

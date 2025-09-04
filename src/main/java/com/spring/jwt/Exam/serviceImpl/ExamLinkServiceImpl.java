@@ -145,6 +145,7 @@ public class ExamLinkServiceImpl implements ExamLinkService {
                 .isLive(paper.getIsLive())
                 .studentClass(session.getStudentClass())
                 .paperPatternId(paper.getPaperPattern() != null ? paper.getPaperPattern().getPaperPatternId() : null)
+                .userId(session.getUser().getId())   // ✅ here you set userId
                 .questions(questionDTOs)
                 .build();
     }
