@@ -34,123 +34,139 @@ public class ExamLinkServiceImpl implements ExamLinkService {
 
     @Override
     public CreateExamLinkResponse createExamLink(CreateExamLinkRequest request) {
-<span class="nc" id="L37">        Paper paper = paperRepository.findById(request.getPaperId())</span>
-<span class="nc" id="L38">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper not found&quot;));</span>
+<span class="nc" id="L37">        System.out.println(&quot;1&quot;);</span>
+<span class="nc" id="L38">        Paper paper = paperRepository.findById(request.getPaperId())</span>
+<span class="nc" id="L39">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Paper not found&quot;));</span>
 
-<span class="nc" id="L40">        String uuid = UUID.randomUUID().toString();</span>
+<span class="nc" id="L41">        String uuid = UUID.randomUUID().toString();</span>
 
-<span class="nc" id="L42">        ExamAccessLink link = ExamAccessLink.builder()</span>
-<span class="nc" id="L43">                .uuid(uuid)</span>
-<span class="nc" id="L44">                .paper(paper)</span>
-<span class="nc" id="L45">                .userId(request.getUserId())</span>
-<span class="nc" id="L46">                .studentClass(request.getStudentClass())</span>
-<span class="nc" id="L47">                .used(false)</span>
-<span class="nc" id="L48">                .createdAt(LocalDateTime.now())</span>
-<span class="nc" id="L49">                .build();</span>
+<span class="nc" id="L43">        ExamAccessLink link = ExamAccessLink.builder()</span>
+<span class="nc" id="L44">                .uuid(uuid)</span>
+<span class="nc" id="L45">                .paper(paper)</span>
+<span class="nc" id="L46">                .userId(request.getUserId())</span>
+<span class="nc" id="L47">                .studentClass(request.getStudentClass())</span>
+<span class="nc" id="L48">                .used(false)</span>
+<span class="nc" id="L49">                .createdAt(LocalDateTime.now())</span>
+<span class="nc" id="L50">                .build();</span>
 
-<span class="nc" id="L51">        examAccessLinkRepository.save(link);</span>
+<span class="nc" id="L52">        examAccessLinkRepository.save(link);</span>
 
-<span class="nc" id="L53">        return CreateExamLinkResponse.builder()</span>
-<span class="nc" id="L54">                .uuid(uuid)</span>
-<span class="nc" id="L55">                .examUrl(&quot;https://yourdomain.com/test/&quot; + uuid)</span>
-<span class="nc" id="L56">                .build();</span>
+<span class="nc" id="L54">        return CreateExamLinkResponse.builder()</span>
+<span class="nc" id="L55">                .uuid(uuid)</span>
+<span class="nc" id="L56">                .examUrl(&quot;https://gtasterixt.netlify.app/test/&quot; + uuid)</span>
+<span class="nc" id="L57">                .build();</span>
     }
 
     @Override
     @Transactional
     public ResponseEntity&lt;?&gt; useExamLink(String uuid) {
         try {
-<span class="nc" id="L63">            ExamAccessLink link = examAccessLinkRepository.findById(uuid)</span>
-<span class="nc" id="L64">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Invalid or expired exam link&quot;));</span>
+<span class="nc" id="L64">            System.out.println(&quot;12&quot;);</span>
+<span class="nc" id="L65">            ExamAccessLink link = examAccessLinkRepository.findById(uuid)</span>
+<span class="nc" id="L66">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Invalid or expired exam link&quot;));</span>
 
 //            if (link.isUsed()) {
 //                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;Test already done&quot;);
 //            }
 
-<span class="nc" id="L70">            Paper paper = link.getPaper();</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (paper == null) {</span>
-<span class="nc" id="L72">                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
-<span class="nc" id="L73">                        .body(&quot;Paper not associated with this link.&quot;);</span>
+<span class="nc" id="L72">            Paper paper = link.getPaper();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (paper == null) {</span>
+<span class="nc" id="L74">                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L75">                        .body(&quot;Paper not associated with this link.&quot;);</span>
             }
 
-<span class="nc" id="L76">            LocalDateTime now = LocalDateTime.now();</span>
-<span class="nc bnc" id="L77" title="All 4 branches missed.">            if ((paper.getStartTime() != null &amp;&amp; now.isBefore(paper.getStartTime())) ||</span>
-<span class="nc bnc" id="L78" title="All 4 branches missed.">                    (paper.getEndTime() != null &amp;&amp; now.isAfter(paper.getEndTime()))) {</span>
-<span class="nc" id="L79">                return ResponseEntity.status(HttpStatus.GONE)</span>
-<span class="nc" id="L80">                        .body(&quot;Exam not accessible at this time.&quot;);</span>
+<span class="nc" id="L78">            LocalDateTime now = LocalDateTime.now();</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">            if ((paper.getStartTime() != null &amp;&amp; now.isBefore(paper.getStartTime())) ||</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">                    (paper.getEndTime() != null &amp;&amp; now.isAfter(paper.getEndTime()))) {</span>
+<span class="nc" id="L81">                return ResponseEntity.status(HttpStatus.GONE)</span>
+<span class="nc" id="L82">                        .body(&quot;Exam not accessible at this time.&quot;);</span>
             }
 
-            // Mark as used
-<span class="nc" id="L84">            link.setUsed(true);</span>
-<span class="nc" id="L85">            examAccessLinkRepository.save(link);</span>
+            // Check if an ExamSession for this link already exists
+//            boolean sessionExists = examSessionRepository.existsByPaperAndUserIdAndStudentClass(paper, link.getUserId(),link.getStudentClass());
+<span class="nc" id="L87">            boolean sessionExists = examSessionRepository.existsByPaperAndUserId(paper, link.getUserId());</span>
+
+//            if(sessionExists) {
+//                // Double protection, never create more than one session per link
+//                link.setUsed(true);
+//                examAccessLinkRepository.save(link);
+//                return ResponseEntity.status(HttpStatus.GONE)
+//                        .body(&quot;Exam session already exists for this link.&quot;);
+//            }
+
+            // Mark as used before creating session (to avoid race condition)
+<span class="nc" id="L98">            link.setUsed(true);</span>
+<span class="nc" id="L99">            examAccessLinkRepository.save(link);</span>
 
             // Create Exam Session
-<span class="nc" id="L88">            User user = userRepository.findById(link.getUserId())</span>
-<span class="nc" id="L89">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found&quot;));</span>
+<span class="nc" id="L102">            User user = userRepository.findById(link.getUserId())</span>
+<span class="nc" id="L103">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found&quot;));</span>
 
-<span class="nc" id="L91">            ExamSession session = new ExamSession();</span>
-<span class="nc" id="L92">            session.setUser(user);</span>
-<span class="nc" id="L93">            session.setPaper(paper);</span>
-<span class="nc" id="L94">            session.setStudentClass(link.getStudentClass());</span>
-<span class="nc" id="L95">            session.setStartTime(now);</span>
-<span class="nc" id="L96">            session.setScore(0.0);</span>
-<span class="nc" id="L97">            session.setUserAnswers(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L105">            ExamSession session = new ExamSession();</span>
+<span class="nc" id="L106">            session.setUser(user);</span>
+<span class="nc" id="L107">            session.setPaper(paper);</span>
+<span class="nc" id="L108">            session.setStudentClass(link.getStudentClass());</span>
+<span class="nc" id="L109">            session.setStartTime(now);</span>
+//            session.setScore(0.0);
+<span class="nc" id="L111">            session.setUserAnswers(new ArrayList&lt;&gt;());</span>
 
-<span class="nc" id="L99">            examSessionRepository.save(session);</span>
+<span class="nc" id="L113">            examSessionRepository.save(session);</span>
 
-<span class="nc" id="L101">            PaperWithQuestionsDTOn dto = buildExamDTO(session);</span>
-<span class="nc" id="L102">            return ResponseEntity.ok(dto);</span>
+<span class="nc" id="L115">            PaperWithQuestionsDTOn dto = buildExamDTO(session);</span>
+<span class="nc" id="L116">            return ResponseEntity.ok(dto);</span>
 
-<span class="nc" id="L104">        } catch (ResourceNotFoundException e) {</span>
-<span class="nc" id="L105">            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());</span>
-<span class="nc" id="L106">        } catch (Exception e) {</span>
-<span class="nc" id="L107">            e.printStackTrace(); // Logs to console or server log</span>
-<span class="nc" id="L108">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
-<span class="nc" id="L109">                    .body(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L118">        } catch (ResourceNotFoundException e) {</span>
+<span class="nc" id="L119">            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());</span>
+<span class="nc" id="L120">        } catch (Exception e) {</span>
+<span class="nc" id="L121">            e.printStackTrace();</span>
+<span class="nc" id="L122">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L123">                    .body(&quot;Unexpected error: &quot; + e.getMessage());</span>
         }
     }
 
 
-    private PaperWithQuestionsDTOn buildExamDTO(ExamSession session) {
-<span class="nc" id="L115">        Paper paper = session.getPaper();</span>
 
-<span class="nc" id="L117">        List&lt;QuestionNoAnswerDTO&gt; questionDTOs = paper.getPaperQuestions().stream()</span>
-<span class="nc" id="L118">                .map(pq -&gt; convertToQuestionNoAnswerDTO(pq.getQuestion()))</span>
-<span class="nc" id="L119">                .collect(Collectors.toList());</span>
+    private PaperWithQuestionsDTOn buildExamDTO(ExamSession session) {
+<span class="nc" id="L130">        Paper paper = session.getPaper();</span>
+
+<span class="nc" id="L132">        List&lt;QuestionNoAnswerDTO&gt; questionDTOs = paper.getPaperQuestions().stream()</span>
+<span class="nc" id="L133">                .map(pq -&gt; convertToQuestionNoAnswerDTO(pq.getQuestion()))</span>
+<span class="nc" id="L134">                .collect(Collectors.toList());</span>
 
 //        Collections.shuffle(questionDTOs);
 
-<span class="nc" id="L123">        return PaperWithQuestionsDTOn.builder()</span>
-<span class="nc" id="L124">                .sessionId(session.getSessionId())</span>
-<span class="nc" id="L125">                .paperId(paper.getPaperId())</span>
-<span class="nc" id="L126">                .title(paper.getTitle())</span>
-<span class="nc" id="L127">                .description(paper.getDescription())</span>
-<span class="nc" id="L128">                .startTime(paper.getStartTime())</span>
-<span class="nc" id="L129">                .endTime(paper.getEndTime())</span>
-<span class="nc" id="L130">                .isLive(paper.getIsLive())</span>
-<span class="nc" id="L131">                .studentClass(session.getStudentClass())</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">                .paperPatternId(paper.getPaperPattern() != null ? paper.getPaperPattern().getPaperPatternId() : null)</span>
-<span class="nc" id="L133">                .questions(questionDTOs)</span>
-<span class="nc" id="L134">                .build();</span>
+<span class="nc" id="L138">        return PaperWithQuestionsDTOn.builder()</span>
+<span class="nc" id="L139">                .sessionId(session.getSessionId())</span>
+<span class="nc" id="L140">                .paperId(paper.getPaperId())</span>
+<span class="nc" id="L141">                .title(paper.getTitle())</span>
+<span class="nc" id="L142">                .description(paper.getDescription())</span>
+<span class="nc" id="L143">                .startTime(paper.getStartTime())</span>
+<span class="nc" id="L144">                .endTime(paper.getEndTime())</span>
+<span class="nc" id="L145">                .isLive(paper.getIsLive())</span>
+<span class="nc" id="L146">                .studentClass(session.getStudentClass())</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                .paperPatternId(paper.getPaperPattern() != null ? paper.getPaperPattern().getPaperPatternId() : null)</span>
+<span class="nc" id="L148">                .userId(session.getUser().getId())   // ✅ here you set userId</span>
+<span class="nc" id="L149">                .questions(questionDTOs)</span>
+<span class="nc" id="L150">                .build();</span>
     }
 
     private QuestionNoAnswerDTO convertToQuestionNoAnswerDTO(Question question) {
-<span class="nc" id="L138">        return QuestionNoAnswerDTO.builder()</span>
-<span class="nc" id="L139">                .questionId(Long.valueOf(question.getQuestionId()))</span>
-<span class="nc" id="L140">                .questionText(question.getQuestionText())</span>
-<span class="nc" id="L141">                .type((question.getType()))</span>
-<span class="nc" id="L142">                .subject(question.getSubject())</span>
-<span class="nc" id="L143">                .level(question.getLevel())</span>
-<span class="nc" id="L144">                .marks(Double.valueOf(question.getMarks()))</span>
-<span class="nc" id="L145">                .userId(Long.valueOf(question.getUserId()))</span>
-<span class="nc" id="L146">                .option1(question.getOption1())</span>
-<span class="nc" id="L147">                .option2(question.getOption2())</span>
-<span class="nc" id="L148">                .option3(question.getOption3())</span>
-<span class="nc" id="L149">                .option4(question.getOption4())</span>
-<span class="nc" id="L150">                .studentClass(question.getStudentClass())</span>
-<span class="nc" id="L151">                .isDescriptive(question.isDescriptive())</span>
-<span class="nc" id="L152">                .isMultiOptions(question.isMultiOptions())</span>
-<span class="nc" id="L153">                .build();</span>
+<span class="nc" id="L154">        return QuestionNoAnswerDTO.builder()</span>
+<span class="nc" id="L155">                .questionId(Long.valueOf(question.getQuestionId()))</span>
+<span class="nc" id="L156">                .questionText(question.getQuestionText())</span>
+<span class="nc" id="L157">                .type((question.getType()))</span>
+<span class="nc" id="L158">                .subject(question.getSubject())</span>
+<span class="nc" id="L159">                .level(question.getLevel())</span>
+<span class="nc" id="L160">                .marks(Double.valueOf(question.getMarks()))</span>
+<span class="nc" id="L161">                .userId(Long.valueOf(question.getUserId()))</span>
+<span class="nc" id="L162">                .option1(question.getOption1())</span>
+<span class="nc" id="L163">                .option2(question.getOption2())</span>
+<span class="nc" id="L164">                .option3(question.getOption3())</span>
+<span class="nc" id="L165">                .option4(question.getOption4())</span>
+<span class="nc" id="L166">                .studentClass(question.getStudentClass())</span>
+<span class="nc" id="L167">                .isDescriptive(question.isDescriptive())</span>
+<span class="nc" id="L168">                .isMultiOptions(question.isMultiOptions())</span>
+<span class="nc" id="L169">                .build();</span>
     }
 
 

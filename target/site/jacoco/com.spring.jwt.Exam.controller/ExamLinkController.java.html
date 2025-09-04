@@ -16,17 +16,19 @@ public class ExamLinkController {
     private final ExamLinkService examLinkService;
 
     @PostMapping(&quot;/create&quot;)
+
     public ResponseEntity&lt;CreateExamLinkResponse&gt; createExamLink(@RequestBody CreateExamLinkRequest request) {
-<span class="nc" id="L20">        return ResponseEntity.ok(examLinkService.createExamLink(request));</span>
+<span class="nc" id="L21">        System.out.println(&quot;11&quot;);</span>
+<span class="nc" id="L22">        return ResponseEntity.ok(examLinkService.createExamLink(request));</span>
     }
 
     @GetMapping(&quot;/{uuid}&quot;)
     public ResponseEntity&lt;?&gt; useExamLink(@PathVariable String uuid) {
         try {
-<span class="nc" id="L26">            return examLinkService.useExamLink(uuid);</span>
-<span class="nc" id="L27">        } catch (Exception e) {</span>
-<span class="nc" id="L28">            e.printStackTrace(); // or use logger.error()</span>
-<span class="nc" id="L29">            return ResponseEntity.status(500).body(&quot;Internal error: &quot; + e.getMessage());</span>
+<span class="nc" id="L28">            return examLinkService.useExamLink(uuid);</span>
+<span class="nc" id="L29">        } catch (Exception e) {</span>
+<span class="nc" id="L30">            e.printStackTrace(); // or use logger.error()</span>
+<span class="nc" id="L31">            return ResponseEntity.status(500).body(&quot;Internal error: &quot; + e.getMessage());</span>
         }
     }
 
